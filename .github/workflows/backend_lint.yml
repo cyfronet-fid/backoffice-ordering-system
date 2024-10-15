@@ -1,0 +1,76 @@
+name: backend_lint
+run-name: ${{ github.actor }} is running a backend lint job...
+on: [push]
+jobs:
+  black:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: psf/black@stable
+        with:
+          options: "--check --verbose --config ./backend/pyproject.toml"
+          src: "./backend/app"
+
+  isort:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+      - uses: isort/isort-action@master
+        with:
+          configuration: '--check-only --verbose --settings-path ./backend/pyproject.toml'
+          sort-paths: './backend/app'
+
+  bandit:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: "./backend"
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: "python -m pip install poetry"
+      - run: "poetry install"
+      - run: "poetry run bandit -r --verbose app/"
+
+  pylint:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: "./backend"
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: "python -m pip install poetry"
+      - run: "poetry install"
+      - run: "poetry run pylint --verbose app/"
+
+  mypy:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: "./backend"
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: "python -m pip install poetry"
+      - run: "poetry install"
+      - run: "poetry run mypy app/"
