@@ -46,7 +46,7 @@ export function Tickets() {
           <div>
             <ul>
               {tickets.map((ticket, index) => (
-                <li key={index}>{ticket.title}</li>
+                <li key={index}>{ticket.summary}</li>
               ))}
             </ul>
           </div>

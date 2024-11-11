@@ -5,13 +5,27 @@ export type HTTPValidationError = {
 };
 
 export type TicketCreate = {
-  title: string;
-  description: string;
+  summary: string;
+  order_reference: string;
+  platforms: Array<string>;
+  i_need_a_voucher: boolean;
+  voucher_id: string | null;
+  category: string | null;
+  service: string;
+  offer: string;
+  offer_type: string;
 };
 
 export type TicketPublic = {
-  title: string;
-  description: string;
+  summary: string;
+  order_reference: string;
+  platforms: Array<string>;
+  i_need_a_voucher: boolean;
+  voucher_id: string | null;
+  category: string | null;
+  service: string;
+  offer: string;
+  offer_type: string;
   id: number;
 };
 
@@ -33,6 +47,8 @@ export type CreateTicketTicketsPostResponse = TicketPublic;
 
 export type CreateTicketTicketsPostError = HTTPValidationError;
 
-export type ReadRootGetResponse = unknown;
+export type ReadRootGetResponse = {
+  [key: string]: string;
+};
 
 export type ReadRootGetError = unknown;

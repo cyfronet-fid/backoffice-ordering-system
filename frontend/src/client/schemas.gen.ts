@@ -16,29 +16,129 @@ export const HTTPValidationErrorSchema = {
 
 export const TicketCreateSchema = {
   properties: {
-    title: {
+    summary: {
       type: "string",
-      title: "Title",
+      title: "Summary",
     },
-    description: {
+    order_reference: {
       type: "string",
-      title: "Description",
+      title: "Order Reference",
+    },
+    platforms: {
+      items: {
+        type: "string",
+      },
+      type: "array",
+      title: "Platforms",
+    },
+    i_need_a_voucher: {
+      type: "boolean",
+      title: "I Need A Voucher",
+    },
+    voucher_id: {
+      anyOf: [
+        {
+          type: "string",
+        },
+        {
+          type: "null",
+        },
+      ],
+      title: "Voucher Id",
+    },
+    category: {
+      anyOf: [
+        {
+          type: "string",
+        },
+        {
+          type: "null",
+        },
+      ],
+      title: "Category",
+    },
+    service: {
+      type: "string",
+      title: "Service",
+    },
+    offer: {
+      type: "string",
+      title: "Offer",
+    },
+    offer_type: {
+      type: "string",
+      title: "Offer Type",
     },
   },
   type: "object",
-  required: ["title", "description"],
+  required: [
+    "summary",
+    "order_reference",
+    "platforms",
+    "i_need_a_voucher",
+    "voucher_id",
+    "category",
+    "service",
+    "offer",
+    "offer_type",
+  ],
   title: "TicketCreate",
 } as const;
 
 export const TicketPublicSchema = {
   properties: {
-    title: {
+    summary: {
       type: "string",
-      title: "Title",
+      title: "Summary",
     },
-    description: {
+    order_reference: {
       type: "string",
-      title: "Description",
+      title: "Order Reference",
+    },
+    platforms: {
+      items: {
+        type: "string",
+      },
+      type: "array",
+      title: "Platforms",
+    },
+    i_need_a_voucher: {
+      type: "boolean",
+      title: "I Need A Voucher",
+    },
+    voucher_id: {
+      anyOf: [
+        {
+          type: "string",
+        },
+        {
+          type: "null",
+        },
+      ],
+      title: "Voucher Id",
+    },
+    category: {
+      anyOf: [
+        {
+          type: "string",
+        },
+        {
+          type: "null",
+        },
+      ],
+      title: "Category",
+    },
+    service: {
+      type: "string",
+      title: "Service",
+    },
+    offer: {
+      type: "string",
+      title: "Offer",
+    },
+    offer_type: {
+      type: "string",
+      title: "Offer Type",
     },
     id: {
       type: "integer",
@@ -46,7 +146,18 @@ export const TicketPublicSchema = {
     },
   },
   type: "object",
-  required: ["title", "description", "id"],
+  required: [
+    "summary",
+    "order_reference",
+    "platforms",
+    "i_need_a_voucher",
+    "voucher_id",
+    "category",
+    "service",
+    "offer",
+    "offer_type",
+    "id",
+  ],
   title: "TicketPublic",
 } as const;
 
