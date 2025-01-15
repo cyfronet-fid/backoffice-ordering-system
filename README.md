@@ -59,13 +59,6 @@ Generate a new migration based on your new models
 alembic revision --autogenerate -m "{MIGRATION NAME}"
 ```
 
-**IMPORTANT**: ALL models NEED to be exported in the `/backend/app/models/__init__.py` file for them to be picked up by alembic! Like so:
-```python
-from .ticket import *
-```
-
-(*I will know you didn't read the README if you raise this problem*)
-
 ### Run tests
 
 ```shell
