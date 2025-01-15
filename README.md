@@ -59,13 +59,6 @@ Generate a new migration based on your new models
 alembic revision --autogenerate -m "{MIGRATION NAME}"
 ```
 
-**IMPORTANT**: ALL models NEED to be exported in the `/backend/app/models/__init__.py` file for them to be picked up by alembic! Like so:
-```python
-from .ticket import *
-```
-
-(*I will know you didn't read the README if you raise this problem*)
-
 ### Run tests
 
 ```shell
@@ -76,12 +69,12 @@ poetry run pytest tests/
 
 Check mode
 ```shell
-black --check --verbose app/ && isort --check-only --verbose app/ && bandit -r --verbose app/ && mypy app/ && pylint --verbose app/
+black --check --verbose app/ migrations/ && isort --check-only --verbose app/ migrations/ && bandit -r --verbose app/ && mypy app/ && pylint --verbose app/
 ```
 
 Write mode
 ```shell
-black app && isort app
+black app/ migrations/ && isort app migrations/
 ```
 
 *PS: Tests and linters will also run on GitHub push so you better run and check them locally first :)*
