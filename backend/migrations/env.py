@@ -4,7 +4,7 @@ from alembic import context
 from sqlmodel import SQLModel, create_engine
 
 from app.config import get_settings
-from app.models import *  # Necessary for SQLModel to work! DO NOT DELETE
+from app.models.tables import *  # Necessary for SQLModel to work! DO NOT DELETE
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
