@@ -1,31 +1,36 @@
+import { ChakraProvider } from "@chakra-ui/react";
+import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import "./index.css";
+import ReactDOM from "react-dom/client";
 
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import Root from "./routes/Root.tsx";
 import { client } from "./client";
-import ErrorPage from "./routes/ErrorPage.tsx";
-import { Tickets } from "./routes/Tickets.tsx";
+import { routeTree } from "./routeTree.gen";
+import "./styles/main.scss";
 
+// Set backend API URL
 client.setConfig({
   baseUrl: import.meta.env.VITE_BACKEND_URL || "http://localhost:8000",
 });
 
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <Root />,
-    errorElement: <ErrorPage />,
-  },
-  {
-    path: "/tickets",
-    element: <Tickets />,
-  },
-]);
+// Create a new router instance
+const router = createRouter({ routeTree });
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <RouterProvider router={router} />
-  </StrictMode>,
-);
+// Register the router instance for type safety
+declare module "@tanstack/react-router" {
+  interface Register {
+    router: typeof router;
+  }
+}
+
+// Render the app
+const rootElement = document.getElementById("root")!;
+if (!rootElement.innerHTML) {
+  const root = ReactDOM.createRoot(rootElement);
+  root.render(
+    <StrictMode>
+      <ChakraProvider>
+        <RouterProvider router={router} />
+      </ChakraProvider>
+    </StrictMode>,
+  );
+}
