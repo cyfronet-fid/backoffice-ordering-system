@@ -1,6 +1,9 @@
 from functools import lru_cache
 
+from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
+
+load_dotenv()  # This is to make the poetry run commands work with .env or if someone doesn't use PyCharm
 
 
 class Settings(BaseSettings):

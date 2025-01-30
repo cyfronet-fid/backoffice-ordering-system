@@ -1,8 +1,8 @@
 from fastapi import APIRouter
 from sqlmodel import select
 
-from app.dependencies import SessionDep
-from app.models.tables import Provider
+from backend.dependencies import SessionDep
+from backend.models.tables import Provider
 
 router = APIRouter(
     prefix="/providers",

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import messages, orders, providers, users
+from backend.routers import messages, orders, providers, users
 
 app = FastAPI()
 app.include_router(orders.router)
