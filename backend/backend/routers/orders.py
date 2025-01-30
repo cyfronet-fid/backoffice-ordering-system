@@ -1,8 +1,8 @@
 from fastapi import APIRouter
 from sqlmodel import select
 
-from app.dependencies import SessionDep
-from app.models.tables import Order
+from backend.dependencies import SessionDep
+from backend.models.tables import Order
 
 router = APIRouter(
     prefix="/orders",

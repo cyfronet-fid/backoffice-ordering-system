@@ -9,5 +9,5 @@ COPY . /backend
 RUN poetry install --no-interaction --no-cache --without dev
 
 EXPOSE 8080
-ENTRYPOINT ["poetry", "run", "uvicorn", "app.main:app", "--port", "8000", "--host", "0.0.0.0"]
+ENTRYPOINT ["poetry", "run", "uvicorn", "backend.main:app", "--port", "8000", "--host", "0.0.0.0"]
 

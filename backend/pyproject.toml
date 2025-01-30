@@ -1,39 +1,25 @@
-[tool.pylint.'MESSAGES CONTROL']
-max-line-length = 120
-disable = "missing-module-docstring, missing-function-docstring, missing-class-docstring, fixme"
+[project]
+name = "backend"
+version = "0.1.0"
+description = ""
+authors = [
+    { name = "Patryk Wójtowicz", email = "patryk.zbigniew.wojtowicz@gmail.com" }
+]
+requires-python = ">=3.12"
 
-
-[tool.black]
-line-length = 120
-target-version = ["py312"]
-
-
-[tool.isort]
-profile = "black"
-line_length = 120
-
-
-[tool.bandit]
-
-
-[tool.poetry]
-package-mode = false
-
-
-[tool.mypy]
-strict = "true"
-
-
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.dependencies]
 python = "^3.12.0"
 fastapi = "^0.115.3"
-uvicorn = "^0.32.0"
+uvicorn = "^0.34.0"
 sqlmodel = "^0.0.22"
 pydantic-settings = "^2.6.0"
 alembic = "^1.13.3"
-psycopg2 = "^2.9.10"
-
+psycopg = "^3.1.18"  # Replaces psycopg2 for async support
+python-dotenv = "^1.0.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.3"
@@ -43,7 +29,29 @@ bandit = "^1.7.10"
 black = "^24.10.0"
 isort = "^5.13.2"
 
+[tool.poetry.scripts]
+"db:seed" = "scripts.db:seed"
+"db:clear" = "scripts.db:clear"
+lint = "scripts.utils:lint"
+format = "scripts.utils:format"
 
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+
+[tool.pylint.'MESSAGES CONTROL']
+max-line-length = 120
+disable = "missing-module-docstring, missing-function-docstring, missing-class-docstring, fixme"
+
+[tool.black]
+line-length = 120
+target-version = ["py312"]
+
+[tool.isort]
+profile = "black"
+line_length = 120
+
+[tool.bandit]
+skips = ["B101"]  # Example: Skip assert statements warnings
+
+[tool.mypy]
+disallow_untyped_defs = true
+check_untyped_defs = true
+warn_unused_ignores = true

@@ -27,14 +27,9 @@ Refer to the documentations linked if some info is missing here.
 poetry install
 ```
 
-From now on, execute every command inside a poetry shell:
-```shell
-poetry shell
-```
-
 ### Run dev server
 ```shell
-uvicorn app.main:app --reload --host localhost
+poetry run uvicorn backend.main:app --reload --host localhost
 ```
 
 ### Run docker dependencies
@@ -51,12 +46,12 @@ docker compose up --scale bos-backend=0
 
 Run pending migrations:
 ```shell
-alembic upgrade head
+poetry run alembic upgrade head
 ```
 
 Generate a new migration based on your new models
 ```shell
-alembic revision --autogenerate -m "{MIGRATION NAME}"
+poetry run alembic revision --autogenerate -m "{MIGRATION NAME}"
 ```
 
 ### Run tests
@@ -67,14 +62,14 @@ poetry run pytest tests/
 
 ### Run linters/formatters
 
-Check mode
+Check (lint-only) mode
 ```shell
-black --check --verbose app/ migrations/ && isort --check-only --verbose app/ migrations/ && bandit -r --verbose app/ && mypy app/ && pylint --verbose app/
+poetry run lint
 ```
 
-Write mode
+Write (format) mode
 ```shell
-black app/ migrations/ && isort app migrations/
+poetry run format
 ```
 
 *PS: Tests and linters will also run on GitHub push so you better run and check them locally first :)*
@@ -83,7 +78,7 @@ black app/ migrations/ && isort app migrations/
 ### ENV
 
 We're using automatic env parsing lib ([pydantic-settings](https://docs.pydantic.dev/latest/concepts/pydantic_settings/)). 
-Check `/backend/app/config.py` for more details.
+Check `/backend/backend/config.py` for more details.
 
 **NOTE**: They need to be present on the server host/container BEFORE starting the server to be respected.
 
@@ -130,12 +125,12 @@ npm run build
 
 ### Run linters/formatters
 
-Check-only mode
+Check (lint-only) mode
 ```shell
 npm run lint
 ```
 
-Write mode
+Write (format) mode
 ```shell
 npm run format
 ```

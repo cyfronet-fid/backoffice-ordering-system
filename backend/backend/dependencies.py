@@ -4,7 +4,7 @@ from fastapi import Depends
 from sqlalchemy import create_engine
 from sqlmodel import Session
 
-from app.config import get_settings
+from backend.config import get_settings
 
 
 def get_session() -> Generator[Session, None, None]:

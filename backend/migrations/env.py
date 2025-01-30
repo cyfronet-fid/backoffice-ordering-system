@@ -3,8 +3,8 @@ from logging.config import fileConfig
 from alembic import context
 from sqlmodel import SQLModel, create_engine
 
-from app.config import get_settings
-from app.models.tables import *  # Necessary for SQLModel to work! DO NOT DELETE
+from backend.config import get_settings
+from backend.models.tables import *  # Necessary for SQLModel to work! DO NOT DELETE
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

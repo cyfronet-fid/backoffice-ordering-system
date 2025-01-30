@@ -1,10 +1,22 @@
-from config import get_settings
-from sqlmodel import Session, create_engine
+from sqlmodel import Session, create_engine, delete, SQLModel
 
-from app.models.tables import Message, Order, OrderStatus, User, UserType, Provider
+from backend.config import get_settings
+from backend.models.tables import (
+    Message,
+    Order,
+    OrderStatus,
+    Provider,
+    User,
+    UserType,
+)
 
-if __name__ == "__main__":
-    engine = create_engine(get_settings().db_connection_string)
+
+def _create_engine():
+    return create_engine(get_settings().db_connection_string)
+
+
+def seed():
+    engine = _create_engine()
 
     with Session(engine) as session:
         admin = User(name="admin", email="admin@cyfronet.pl", user_type=[UserType.ADMIN])
@@ -77,4 +89,13 @@ if __name__ == "__main__":
                 message5,
             ]
         )
+        session.commit()
+
+
+def clear():
+    engine = _create_engine()
+
+    with Session(engine) as session:
+        for table in reversed(SQLModel.metadata.sorted_tables):  # Reverse order to respect FK constraints
+            session.exec(delete(table))
         session.commit()
