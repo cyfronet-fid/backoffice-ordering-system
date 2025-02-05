@@ -6,6 +6,7 @@ from sqlalchemy import ARRAY, JSON, Column, String
 from sqlmodel import Enum, Field, Relationship, SQLModel
 
 
+### Link (join) tables
 class UserOrderLink(SQLModel, table=True):
     user_id: int | None = Field(default=None, foreign_key="user.id", primary_key=True, ondelete="CASCADE")
     order_id: int | None = Field(default=None, foreign_key="order.id", primary_key=True, ondelete="CASCADE")
@@ -21,6 +22,7 @@ class OrderProviderLink(SQLModel, table=True):
     provider_id: int | None = Field(default=None, foreign_key="provider.id", primary_key=True, ondelete="CASCADE")
 
 
+### Order
 class OrderStatus(str, enum.Enum):
     SUBMITTED = "submitted"
     ON_HOLD = "on_hold"
@@ -48,6 +50,7 @@ class Order(SQLModel, table=True):
     providers: list["Provider"] = Relationship(back_populates="orders", link_model=OrderProviderLink)
 
 
+### User
 class UserType(str, enum.Enum):
     MP_USER = "mp_user"
     PROVIDER_MANAGER = "provider_manager"
@@ -55,13 +58,26 @@ class UserType(str, enum.Enum):
     ADMIN = "admin"
 
 
-class User(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
+class UserBase(SQLModel):
     name: str = Field(nullable=False, min_length=1)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
     email: str = Field(nullable=False, unique=True, regex=r"^\S+@\S+\.\S+$")
     user_type: list[UserType] = Field(sa_column=Column(ARRAY(Enum(UserType)), nullable=False), min_length=1)
+
+
+class UserPublic(UserBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class UserCreate(UserBase):
+    pass
+
+
+class User(UserBase, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
 
     messages: list["Message"] = Relationship(back_populates="author", cascade_delete=True)
     orders: list[Order] = Relationship(back_populates="users", link_model=UserOrderLink)

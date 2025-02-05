@@ -1,8 +1,9 @@
 from fastapi import APIRouter, HTTPException
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
 from backend.dependencies import SessionDep
-from backend.models.tables import User
+from backend.models.tables import User, UserCreate, UserPublic
 
 router = APIRouter(
     prefix="/users",
@@ -22,3 +23,18 @@ def get_user_by_id(user_id: int, session: SessionDep):  # type: ignore
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
+
+
+@router.post("/", response_model=UserPublic, operation_id="createUser")
+def create_user(user: UserCreate, session: SessionDep):  # type: ignore
+    db_user = User.model_validate(user)
+
+    try:
+        session.add(db_user)
+        session.commit()
+        session.refresh(db_user)
+    except IntegrityError as e:
+        session.rollback()
+        raise HTTPException(status_code=409) from e
+
+    return db_user
