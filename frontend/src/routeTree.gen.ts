@@ -11,148 +11,152 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as MainImport } from './routes/_main'
-import { Route as MainIndexImport } from './routes/_main/index'
-import { Route as MainUsersIndexImport } from './routes/_main/users/index'
-import { Route as MainProvidersIndexImport } from './routes/_main/providers/index'
-import { Route as MainOrdersIndexImport } from './routes/_main/orders/index'
+import { Route as AuthenticatedImport } from './routes/_authenticated'
+import { Route as IndexImport } from './routes/index'
+import { Route as AuthenticatedUsersIndexImport } from './routes/_authenticated/users/index'
+import { Route as AuthenticatedProvidersIndexImport } from './routes/_authenticated/providers/index'
+import { Route as AuthenticatedOrdersIndexImport } from './routes/_authenticated/orders/index'
 
 // Create/Update Routes
 
-const MainRoute = MainImport.update({
-  id: '/_main',
+const AuthenticatedRoute = AuthenticatedImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRoute,
 } as any)
 
-const MainIndexRoute = MainIndexImport.update({
+const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => MainRoute,
+  getParentRoute: () => rootRoute,
 } as any)
 
-const MainUsersIndexRoute = MainUsersIndexImport.update({
+const AuthenticatedUsersIndexRoute = AuthenticatedUsersIndexImport.update({
   id: '/users/',
   path: '/users/',
-  getParentRoute: () => MainRoute,
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 
-const MainProvidersIndexRoute = MainProvidersIndexImport.update({
-  id: '/providers/',
-  path: '/providers/',
-  getParentRoute: () => MainRoute,
-} as any)
+const AuthenticatedProvidersIndexRoute =
+  AuthenticatedProvidersIndexImport.update({
+    id: '/providers/',
+    path: '/providers/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
-const MainOrdersIndexRoute = MainOrdersIndexImport.update({
+const AuthenticatedOrdersIndexRoute = AuthenticatedOrdersIndexImport.update({
   id: '/orders/',
   path: '/orders/',
-  getParentRoute: () => MainRoute,
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/_main': {
-      id: '/_main'
-      path: ''
-      fullPath: ''
-      preLoaderRoute: typeof MainImport
-      parentRoute: typeof rootRoute
-    }
-    '/_main/': {
-      id: '/_main/'
+    '/': {
+      id: '/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof MainIndexImport
-      parentRoute: typeof MainImport
+      preLoaderRoute: typeof IndexImport
+      parentRoute: typeof rootRoute
     }
-    '/_main/orders/': {
-      id: '/_main/orders/'
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof AuthenticatedImport
+      parentRoute: typeof rootRoute
+    }
+    '/_authenticated/orders/': {
+      id: '/_authenticated/orders/'
       path: '/orders'
       fullPath: '/orders'
-      preLoaderRoute: typeof MainOrdersIndexImport
-      parentRoute: typeof MainImport
+      preLoaderRoute: typeof AuthenticatedOrdersIndexImport
+      parentRoute: typeof AuthenticatedImport
     }
-    '/_main/providers/': {
-      id: '/_main/providers/'
+    '/_authenticated/providers/': {
+      id: '/_authenticated/providers/'
       path: '/providers'
       fullPath: '/providers'
-      preLoaderRoute: typeof MainProvidersIndexImport
-      parentRoute: typeof MainImport
+      preLoaderRoute: typeof AuthenticatedProvidersIndexImport
+      parentRoute: typeof AuthenticatedImport
     }
-    '/_main/users/': {
-      id: '/_main/users/'
+    '/_authenticated/users/': {
+      id: '/_authenticated/users/'
       path: '/users'
       fullPath: '/users'
-      preLoaderRoute: typeof MainUsersIndexImport
-      parentRoute: typeof MainImport
+      preLoaderRoute: typeof AuthenticatedUsersIndexImport
+      parentRoute: typeof AuthenticatedImport
     }
   }
 }
 
 // Create and export the route tree
 
-interface MainRouteChildren {
-  MainIndexRoute: typeof MainIndexRoute
-  MainOrdersIndexRoute: typeof MainOrdersIndexRoute
-  MainProvidersIndexRoute: typeof MainProvidersIndexRoute
-  MainUsersIndexRoute: typeof MainUsersIndexRoute
+interface AuthenticatedRouteChildren {
+  AuthenticatedOrdersIndexRoute: typeof AuthenticatedOrdersIndexRoute
+  AuthenticatedProvidersIndexRoute: typeof AuthenticatedProvidersIndexRoute
+  AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
 }
 
-const MainRouteChildren: MainRouteChildren = {
-  MainIndexRoute: MainIndexRoute,
-  MainOrdersIndexRoute: MainOrdersIndexRoute,
-  MainProvidersIndexRoute: MainProvidersIndexRoute,
-  MainUsersIndexRoute: MainUsersIndexRoute,
+const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedOrdersIndexRoute: AuthenticatedOrdersIndexRoute,
+  AuthenticatedProvidersIndexRoute: AuthenticatedProvidersIndexRoute,
+  AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,
 }
 
-const MainRouteWithChildren = MainRoute._addFileChildren(MainRouteChildren)
+const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
+  AuthenticatedRouteChildren,
+)
 
 export interface FileRoutesByFullPath {
-  '': typeof MainRouteWithChildren
-  '/': typeof MainIndexRoute
-  '/orders': typeof MainOrdersIndexRoute
-  '/providers': typeof MainProvidersIndexRoute
-  '/users': typeof MainUsersIndexRoute
+  '/': typeof IndexRoute
+  '': typeof AuthenticatedRouteWithChildren
+  '/orders': typeof AuthenticatedOrdersIndexRoute
+  '/providers': typeof AuthenticatedProvidersIndexRoute
+  '/users': typeof AuthenticatedUsersIndexRoute
 }
 
 export interface FileRoutesByTo {
-  '/': typeof MainIndexRoute
-  '/orders': typeof MainOrdersIndexRoute
-  '/providers': typeof MainProvidersIndexRoute
-  '/users': typeof MainUsersIndexRoute
+  '/': typeof IndexRoute
+  '': typeof AuthenticatedRouteWithChildren
+  '/orders': typeof AuthenticatedOrdersIndexRoute
+  '/providers': typeof AuthenticatedProvidersIndexRoute
+  '/users': typeof AuthenticatedUsersIndexRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
-  '/_main': typeof MainRouteWithChildren
-  '/_main/': typeof MainIndexRoute
-  '/_main/orders/': typeof MainOrdersIndexRoute
-  '/_main/providers/': typeof MainProvidersIndexRoute
-  '/_main/users/': typeof MainUsersIndexRoute
+  '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/_authenticated/orders/': typeof AuthenticatedOrdersIndexRoute
+  '/_authenticated/providers/': typeof AuthenticatedProvidersIndexRoute
+  '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '' | '/' | '/orders' | '/providers' | '/users'
+  fullPaths: '/' | '' | '/orders' | '/providers' | '/users'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/orders' | '/providers' | '/users'
+  to: '/' | '' | '/orders' | '/providers' | '/users'
   id:
     | '__root__'
-    | '/_main'
-    | '/_main/'
-    | '/_main/orders/'
-    | '/_main/providers/'
-    | '/_main/users/'
+    | '/'
+    | '/_authenticated'
+    | '/_authenticated/orders/'
+    | '/_authenticated/providers/'
+    | '/_authenticated/users/'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
-  MainRoute: typeof MainRouteWithChildren
+  IndexRoute: typeof IndexRoute
+  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  MainRoute: MainRouteWithChildren,
+  IndexRoute: IndexRoute,
+  AuthenticatedRoute: AuthenticatedRouteWithChildren,
 }
 
 export const routeTree = rootRoute
@@ -165,33 +169,32 @@ export const routeTree = rootRoute
     "__root__": {
       "filePath": "__root.tsx",
       "children": [
-        "/_main"
+        "/",
+        "/_authenticated"
       ]
     },
-    "/_main": {
-      "filePath": "_main.tsx",
+    "/": {
+      "filePath": "index.tsx"
+    },
+    "/_authenticated": {
+      "filePath": "_authenticated.tsx",
       "children": [
-        "/_main/",
-        "/_main/orders/",
-        "/_main/providers/",
-        "/_main/users/"
+        "/_authenticated/orders/",
+        "/_authenticated/providers/",
+        "/_authenticated/users/"
       ]
     },
-    "/_main/": {
-      "filePath": "_main/index.tsx",
-      "parent": "/_main"
+    "/_authenticated/orders/": {
+      "filePath": "_authenticated/orders/index.tsx",
+      "parent": "/_authenticated"
     },
-    "/_main/orders/": {
-      "filePath": "_main/orders/index.tsx",
-      "parent": "/_main"
+    "/_authenticated/providers/": {
+      "filePath": "_authenticated/providers/index.tsx",
+      "parent": "/_authenticated"
     },
-    "/_main/providers/": {
-      "filePath": "_main/providers/index.tsx",
-      "parent": "/_main"
-    },
-    "/_main/users/": {
-      "filePath": "_main/users/index.tsx",
-      "parent": "/_main"
+    "/_authenticated/users/": {
+      "filePath": "_authenticated/users/index.tsx",
+      "parent": "/_authenticated"
     }
   }
 }

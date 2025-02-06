@@ -12,10 +12,25 @@ class Settings(BaseSettings):
     db_user: str = "pg"
     db_password: str = "pg"
     db_name: str = "postgres"
+    keycloak_host: str = "https://keycloak.docker-fid.grid.cyf-kr.edu.pl"
+    keycloak_realm: str = "core"
+    keycloak_client_id: str = "bos"
 
     @property
     def db_connection_string(self) -> str:
         return f"postgresql://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
+
+    @property
+    def keycloak_realm_base_url(self) -> str:
+        return f"{self.keycloak_host}/realms/{self.keycloak_realm}"
+
+    @property
+    def keycloak_connection_string(self) -> str:
+        return f"{self.keycloak_realm_base_url}/.well-known/openid-configuration"
+
+    @property
+    def keycloak_jwks_uri(self) -> str:
+        return f"{self.keycloak_realm_base_url}/protocol/openid-connect/certs"
 
 
 @lru_cache

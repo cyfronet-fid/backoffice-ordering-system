@@ -1,9 +1,20 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.params import Depends
 
+from backend.auth import current_user
+from backend.config import get_settings
 from backend.routers import messages, orders, providers, users
 
-app = FastAPI()
+app = FastAPI(
+    swagger_ui_init_oauth={
+        "clientId": get_settings().keycloak_client_id,
+        "realm": get_settings().keycloak_realm,
+        "usePkceWithAuthorizationCodeGrant": True,
+        "scopes": "openid profile email",
+    },
+    dependencies=[Depends(current_user)],
+)
 app.include_router(orders.router)
 app.include_router(users.router)
 app.include_router(providers.router)

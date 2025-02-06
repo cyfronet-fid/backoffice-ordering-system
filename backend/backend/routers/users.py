@@ -1,8 +1,11 @@
-from fastapi import APIRouter, HTTPException
-from sqlalchemy.exc import IntegrityError
-from sqlmodel import select
+from typing import Annotated
 
-from backend.dependencies import SessionDep
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.exc import IntegrityError
+from sqlmodel import Session, select
+
+from backend.auth import current_user
+from backend.db import get_session
 from backend.models.tables import User, UserCreate, UserPublic
 
 router = APIRouter(
@@ -12,13 +15,18 @@ router = APIRouter(
 
 
 @router.get("/", response_model=list[User], operation_id="readUsers")
-def read_users(session: SessionDep):  # type: ignore
+def read_users(session: Annotated[Session, Depends(get_session)]):  # type: ignore
     users = session.exec(select(User)).all()
     return users
 
 
+@router.get("/me", response_model=User, operation_id="getCurrentUser")
+def get_current_user(user: Annotated[User, Depends(current_user)]):  # type: ignore
+    return user
+
+
 @router.get("/{user_id}", response_model=User, operation_id="getUserById")
-def get_user_by_id(user_id: int, session: SessionDep):  # type: ignore
+def get_user_by_id(user_id: int, session: Annotated[Session, Depends(get_session)]):  # type: ignore
     user = session.exec(select(User).where(User.id == user_id)).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -26,7 +34,7 @@ def get_user_by_id(user_id: int, session: SessionDep):  # type: ignore
 
 
 @router.post("/", response_model=UserPublic, operation_id="createUser")
-def create_user(user: UserCreate, session: SessionDep):  # type: ignore
+def create_user(user: UserCreate, session: Annotated[Session, Depends(get_session)]):  # type: ignore
     db_user = User.model_validate(user)
 
     try:

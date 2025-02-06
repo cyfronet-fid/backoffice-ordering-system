@@ -1,19 +1,24 @@
+import { client } from "@/client/client.gen.ts";
+import { DefaultError } from "@/components/common/defaultError.tsx";
+import { FullScreenSpinner } from "@/components/common/fullScreenSpinner.tsx";
+import { NotFound } from "@/components/common/notFound.tsx";
+import { appConfig, oidcConfig } from "@/config.ts";
+import { routeTree } from "@/routeTree.gen.ts";
 import { ChakraProvider } from "@chakra-ui/react";
-import { RouterProvider, createRouter } from "@tanstack/react-router";
+import { createRouter, RouterProvider } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
+import { AuthProvider, useAuth } from "react-oidc-context";
 
-import { client } from "./client";
-import { routeTree } from "./routeTree.gen";
-import "./styles/main.scss";
-
-// Set backend API URL
-client.setConfig({
-  baseUrl: import.meta.env.VITE_BACKEND_URL || "http://localhost:8000",
+const router = createRouter({
+  routeTree,
+  defaultPendingComponent: () => <FullScreenSpinner />,
+  defaultErrorComponent: ({ error }) => <DefaultError error={error} />,
+  defaultNotFoundComponent: () => <NotFound />,
+  context: {
+    auth: undefined!,
+  },
 });
-
-// Create a new router instance
-const router = createRouter({ routeTree });
 
 // Register the router instance for type safety
 declare module "@tanstack/react-router" {
@@ -22,15 +27,38 @@ declare module "@tanstack/react-router" {
   }
 }
 
+// Configure the @hey-api/openapi-ts client
+client.setConfig({
+  baseUrl: appConfig.backendUrl,
+});
+
+export function InnerApp() {
+  const auth = useAuth();
+
+  if (auth.isLoading) {
+    return <FullScreenSpinner />;
+  }
+
+  return <RouterProvider router={router} context={{ auth }} />;
+}
+
+export function App() {
+  return (
+    <AuthProvider {...oidcConfig}>
+      <ChakraProvider>
+        <InnerApp />
+      </ChakraProvider>
+    </AuthProvider>
+  );
+}
+
 // Render the app
 const rootElement = document.getElementById("root")!;
 if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
     <StrictMode>
-      <ChakraProvider>
-        <RouterProvider router={router} />
-      </ChakraProvider>
+      <App />
     </StrictMode>,
   );
 }
