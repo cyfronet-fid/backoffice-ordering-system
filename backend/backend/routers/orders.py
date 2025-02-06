@@ -1,7 +1,9 @@
-from fastapi import APIRouter
-from sqlmodel import select
+from typing import Annotated
 
-from backend.dependencies import SessionDep
+from fastapi import APIRouter, Depends
+from sqlmodel import Session, select
+
+from backend.db import get_session
 from backend.models.tables import Order
 
 router = APIRouter(
@@ -11,6 +13,6 @@ router = APIRouter(
 
 
 @router.get("/", response_model=list[Order], operation_id="readOrders")
-def read_orders(session: SessionDep):  # type: ignore
+def read_orders(session: Annotated[Session, Depends(get_session)]):  # type: ignore
     orders = session.exec(select(Order)).all()
     return orders

@@ -92,6 +92,23 @@ export type ReadUsersResponses = {
 
 export type ReadUsersResponse = ReadUsersResponses[keyof ReadUsersResponses];
 
+export type GetCurrentUserData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/users/me";
+};
+
+export type GetCurrentUserResponses = {
+  /**
+   * Successful Response
+   */
+  200: User;
+};
+
+export type GetCurrentUserResponse =
+  GetCurrentUserResponses[keyof GetCurrentUserResponses];
+
 export type GetUserByIdData = {
   body?: never;
   path: {
@@ -172,3 +189,7 @@ export type ReadRootGetResponses = {
 
 export type ReadRootGetResponse =
   ReadRootGetResponses[keyof ReadRootGetResponses];
+
+export type ClientOptions = {
+  baseUrl: "http://localhost:8000" | (string & {});
+};

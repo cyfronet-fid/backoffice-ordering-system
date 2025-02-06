@@ -20,6 +20,7 @@ pydantic-settings = "^2.6.0"
 alembic = "^1.13.3"
 psycopg = "^3.1.18"  # Replaces psycopg2 for async support
 python-dotenv = "^1.0.1"
+pyjwt = {extras = ["crypto"], version = "^2.10.1"}
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.3"
@@ -33,7 +34,7 @@ isort = "^5.13.2"
 "db:seed" = "scripts.db:seed"
 "db:clear" = "scripts.db:clear"
 lint = "scripts.utils:lint"
-format = "scripts.utils:format"
+format = "scripts.utils:format_"
 
 
 [tool.pylint.'MESSAGES CONTROL']

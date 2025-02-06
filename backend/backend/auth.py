@@ -1,0 +1,68 @@
+import re
+from typing import Annotated, Any
+
+import jwt
+from fastapi import Depends, HTTPException
+from fastapi.security import OpenIdConnect
+from sqlmodel import Session, select
+
+from backend.config import get_settings
+from backend.db import get_session
+from backend.models.tables import User, UserType
+
+oidc = OpenIdConnect(openIdConnectUrl=get_settings().keycloak_connection_string)
+jwks_client = jwt.PyJWKClient(get_settings().keycloak_jwks_uri)
+
+BEARER_PATTERN = re.compile(r"^Bearer: ([A-Za-z0-9\-_.]+)$")
+
+
+def verify_token(raw_token: Annotated[str, Depends(oidc)]) -> dict[str, Any]:
+    match = BEARER_PATTERN.match(raw_token)
+    if not match:
+        raise HTTPException(status_code=401, detail="Invalid authentication token format")
+
+    token = match.group(1)
+
+    try:
+        signing_key = jwks_client.get_signing_key_from_jwt(token)
+
+        payload = jwt.decode(
+            jwt=token,
+            key=signing_key,
+            audience=get_settings().keycloak_client_id,
+            issuer=get_settings().keycloak_realm_base_url,
+            algorithms=["RS256"],
+            leeway=5,  # KeyCloak's clock is mismatched +/- 5 seconds
+        )
+
+        return payload
+
+    except jwt.ExpiredSignatureError as e:
+        raise HTTPException(status_code=401, detail="Token has expired") from e
+    except jwt.InvalidTokenError as e:
+        raise HTTPException(status_code=401, detail="Invalid token") from e
+
+
+def current_user(
+    token: Annotated[dict[str, Any], Depends(verify_token)], session: Annotated[Session, Depends(get_session)]
+) -> User:
+    name = token["name"]
+    email = token["email"]
+
+    query = select(User).where(User.email == email)
+    user = session.exec(query).first()
+
+    if user is None:
+        user = User(
+            name=name,
+            email=email,
+            # TODO: Get the proper role from KeyCloak once it's there
+            #   For, now we can assume anyone there is a project_manager, since other roles will need to be
+            #   filled in the db manually anyway
+            user_type=[UserType.PROVIDER_MANAGER],
+        )
+        session.add(user)
+        session.commit()
+        session.refresh(user)
+
+    return user

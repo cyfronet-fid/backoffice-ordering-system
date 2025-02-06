@@ -22,7 +22,7 @@ def lint() -> None:
             sys.exit(1)
 
 
-def format() -> None:
+def format_() -> None:
     commands = ["black backend/ migrations/", "isort backend/ migrations/"]
 
     for command in commands:
