@@ -4,18 +4,20 @@ export type HttpValidationError = {
   detail?: Array<ValidationError>;
 };
 
-export type Message = {
-  id?: number | null;
-  created_at?: string;
+export type MessageCreate = {
   content: string;
-  author_id?: number | null;
-  order_id?: number | null;
+  order_id: number;
 };
 
-export type Order = {
-  id?: number | null;
-  created_at?: string;
-  updated_at?: string;
+export type MessagePublic = {
+  content: string;
+  id: number;
+  created_at: string;
+  author: UserPublic;
+  order: OrderPublic;
+};
+
+export type OrderPublic = {
   external_ref: string;
   project_ref: string;
   status?: OrderStatus;
@@ -26,6 +28,26 @@ export type Order = {
   resource_ref: string;
   resource_type: string;
   resource_name: string;
+  id: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type OrderPublicWithProviders = {
+  external_ref: string;
+  project_ref: string;
+  status?: OrderStatus;
+  config: {
+    [key: string]: unknown;
+  };
+  platforms: Array<string>;
+  resource_ref: string;
+  resource_type: string;
+  resource_name: string;
+  id: number;
+  created_at: string;
+  updated_at: string;
+  providers?: Array<ProviderPublic>;
 };
 
 export type OrderStatus =
@@ -36,20 +58,45 @@ export type OrderStatus =
   | "rejected"
   | "cancelled";
 
-export type Provider = {
-  id?: number | null;
-  created_at?: string;
+export type ProviderPublic = {
   name: string;
   website: string;
+  id: number;
+  created_at: string;
 };
 
-export type User = {
-  id?: number | null;
+export type ProviderPublicWithDetails = {
   name: string;
-  created_at?: string;
-  updated_at?: string;
+  website: string;
+  id: number;
+  created_at: string;
+  managers?: Array<UserPublic>;
+  orders?: Array<OrderPublic>;
+};
+
+export type UserCreate = {
+  name: string;
   email: string;
   user_type: Array<UserType>;
+};
+
+export type UserPublic = {
+  name: string;
+  email: string;
+  user_type: Array<UserType>;
+  id: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type UserPublicWithEmployers = {
+  name: string;
+  email: string;
+  user_type: Array<UserType>;
+  id: number;
+  created_at: string;
+  updated_at: string;
+  employers?: Array<ProviderPublic>;
 };
 
 export type UserType = "mp_user" | "provider_manager" | "coordinator" | "admin";
@@ -71,10 +118,98 @@ export type ReadOrdersResponses = {
   /**
    * Successful Response
    */
-  200: Array<Order>;
+  200: Array<OrderPublicWithProviders>;
 };
 
 export type ReadOrdersResponse = ReadOrdersResponses[keyof ReadOrdersResponses];
+
+export type GetOrderByIdData = {
+  body?: never;
+  path: {
+    order_id: number;
+  };
+  query?: never;
+  url: "/orders/{order_id}";
+};
+
+export type GetOrderByIdErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type GetOrderByIdError = GetOrderByIdErrors[keyof GetOrderByIdErrors];
+
+export type GetOrderByIdResponses = {
+  /**
+   * Successful Response
+   */
+  200: OrderPublicWithProviders;
+};
+
+export type GetOrderByIdResponse =
+  GetOrderByIdResponses[keyof GetOrderByIdResponses];
+
+export type GetOrderMessagesData = {
+  body?: never;
+  path: {
+    order_id: number;
+  };
+  query?: never;
+  url: "/orders/{order_id}/messages";
+};
+
+export type GetOrderMessagesErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type GetOrderMessagesError =
+  GetOrderMessagesErrors[keyof GetOrderMessagesErrors];
+
+export type GetOrderMessagesResponses = {
+  /**
+   * Successful Response
+   */
+  200: Array<MessagePublic>;
+};
+
+export type GetOrderMessagesResponse =
+  GetOrderMessagesResponses[keyof GetOrderMessagesResponses];
+
+export type ChangeOrderStatusData = {
+  body?: never;
+  path: {
+    order_id: number;
+  };
+  query: {
+    new_status: OrderStatus;
+  };
+  url: "/orders/{order_id}/change_status";
+};
+
+export type ChangeOrderStatusErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ChangeOrderStatusError =
+  ChangeOrderStatusErrors[keyof ChangeOrderStatusErrors];
+
+export type ChangeOrderStatusResponses = {
+  /**
+   * Successful Response
+   */
+  200: OrderPublic;
+};
+
+export type ChangeOrderStatusResponse =
+  ChangeOrderStatusResponses[keyof ChangeOrderStatusResponses];
 
 export type ReadUsersData = {
   body?: never;
@@ -87,10 +222,35 @@ export type ReadUsersResponses = {
   /**
    * Successful Response
    */
-  200: Array<User>;
+  200: Array<UserPublic>;
 };
 
 export type ReadUsersResponse = ReadUsersResponses[keyof ReadUsersResponses];
+
+export type CreateUserData = {
+  body: UserCreate;
+  path?: never;
+  query?: never;
+  url: "/users/";
+};
+
+export type CreateUserErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type CreateUserError = CreateUserErrors[keyof CreateUserErrors];
+
+export type CreateUserResponses = {
+  /**
+   * Successful Response
+   */
+  200: UserPublic;
+};
+
+export type CreateUserResponse = CreateUserResponses[keyof CreateUserResponses];
 
 export type GetCurrentUserData = {
   body?: never;
@@ -103,7 +263,7 @@ export type GetCurrentUserResponses = {
   /**
    * Successful Response
    */
-  200: User;
+  200: UserPublic;
 };
 
 export type GetCurrentUserResponse =
@@ -131,7 +291,7 @@ export type GetUserByIdResponses = {
   /**
    * Successful Response
    */
-  200: User;
+  200: UserPublicWithEmployers;
 };
 
 export type GetUserByIdResponse =
@@ -148,11 +308,40 @@ export type ReadProvidersResponses = {
   /**
    * Successful Response
    */
-  200: Array<Provider>;
+  200: Array<ProviderPublic>;
 };
 
 export type ReadProvidersResponse =
   ReadProvidersResponses[keyof ReadProvidersResponses];
+
+export type GetProviderByIdData = {
+  body?: never;
+  path: {
+    provider_id: number;
+  };
+  query?: never;
+  url: "/providers/{provider_id}";
+};
+
+export type GetProviderByIdErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type GetProviderByIdError =
+  GetProviderByIdErrors[keyof GetProviderByIdErrors];
+
+export type GetProviderByIdResponses = {
+  /**
+   * Successful Response
+   */
+  200: ProviderPublicWithDetails;
+};
+
+export type GetProviderByIdResponse =
+  GetProviderByIdResponses[keyof GetProviderByIdResponses];
 
 export type ReadMessagesData = {
   body?: never;
@@ -165,11 +354,37 @@ export type ReadMessagesResponses = {
   /**
    * Successful Response
    */
-  200: Array<Message>;
+  200: Array<MessagePublic>;
 };
 
 export type ReadMessagesResponse =
   ReadMessagesResponses[keyof ReadMessagesResponses];
+
+export type CreateMessageData = {
+  body: MessageCreate;
+  path?: never;
+  query?: never;
+  url: "/messages/";
+};
+
+export type CreateMessageErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type CreateMessageError = CreateMessageErrors[keyof CreateMessageErrors];
+
+export type CreateMessageResponses = {
+  /**
+   * Successful Response
+   */
+  200: MessagePublic;
+};
+
+export type CreateMessageResponse =
+  CreateMessageResponses[keyof CreateMessageResponses];
 
 export type ReadRootGetData = {
   body?: never;

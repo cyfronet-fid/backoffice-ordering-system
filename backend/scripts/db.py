@@ -19,12 +19,12 @@ def seed():
     engine = _create_engine()
 
     with Session(engine) as session:
-        admin = User(name="admin", email="admin@cyfronet.pl", user_type=[UserType.ADMIN])
-        coordinator = User(name="coordinator", email="coordinator@cyfronet.pl", user_type=[UserType.COORDINATOR])
-        alice_provider = User(name="alice", email="alice@provider.com", user_type=[UserType.PROVIDER_MANAGER])
-        bob_provider = User(name="bob", email="bob@provider.com", user_type=[UserType.PROVIDER_MANAGER])
-        joe = User(name="joe moe", email="joe@gmail.com", user_type=[UserType.MP_USER])
-        jane = User(name="jane doe", email="jane@gmail.com", user_type=[UserType.MP_USER])
+        admin = User(name="HAL 9000", email="admin@cyfronet.pl", user_type=[UserType.ADMIN, UserType.COORDINATOR])
+        coordinator = User(name="Mr. Uptight", email="coordinator@cyfronet.pl", user_type=[UserType.COORDINATOR])
+        alice_provider = User(name="Alice", email="alice@provider.com", user_type=[UserType.PROVIDER_MANAGER])
+        bob_provider = User(name="Bob", email="bob@provider.com", user_type=[UserType.PROVIDER_MANAGER])
+        joe = User(name="Joe Moe", email="joe@gmail.com", user_type=[UserType.MP_USER])
+        jane = User(name="Jane Doe", email="jane@gmail.com", user_type=[UserType.MP_USER])
 
         gcp_provider = Provider(
             name="Google Cloud Platform",
@@ -36,6 +36,7 @@ def seed():
             website="https://aws.amazon.com",
             managers=[alice_provider, bob_provider],
         )
+        null_provider = Provider(name="Lonely", website="https://example.com")
 
         order1 = Order(
             external_ref="/project/joes_project/order/1",
@@ -67,6 +68,19 @@ def seed():
             providers=[aws_provider],
         )
 
+        order3 = Order(
+            external_ref="additional",
+            project_ref="additional",
+            status=OrderStatus.COMPLETED,
+            config={"cpus": 256, "memory": 1024, "GPU": "H100"},
+            platforms=["my plat"],
+            resource_ref="additional",
+            resource_type="order_required",
+            resource_name="EC2-AI-Training",
+            users=[jane, bob_provider],
+            providers=[aws_provider],
+        )
+
         message4 = Message(content="The configuration you want is outrageous...", author=alice_provider, order=order2)
         message5 = Message(content="+1", author=bob_provider, order=order2)
 
@@ -80,8 +94,10 @@ def seed():
                 jane,
                 gcp_provider,
                 aws_provider,
+                null_provider,
                 order1,
                 order2,
+                order3,
                 message1,
                 message2,
                 message3,

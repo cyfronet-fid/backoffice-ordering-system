@@ -16,6 +16,9 @@ import { Route as IndexImport } from './routes/index'
 import { Route as AuthenticatedUsersIndexImport } from './routes/_authenticated/users/index'
 import { Route as AuthenticatedProvidersIndexImport } from './routes/_authenticated/providers/index'
 import { Route as AuthenticatedOrdersIndexImport } from './routes/_authenticated/orders/index'
+import { Route as AuthenticatedUsersUserIdImport } from './routes/_authenticated/users/$userId'
+import { Route as AuthenticatedProvidersProviderIdImport } from './routes/_authenticated/providers/$providerId'
+import { Route as AuthenticatedOrdersOrderIdImport } from './routes/_authenticated/orders/$orderId'
 
 // Create/Update Routes
 
@@ -49,6 +52,27 @@ const AuthenticatedOrdersIndexRoute = AuthenticatedOrdersIndexImport.update({
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 
+const AuthenticatedUsersUserIdRoute = AuthenticatedUsersUserIdImport.update({
+  id: '/users/$userId',
+  path: '/users/$userId',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+
+const AuthenticatedProvidersProviderIdRoute =
+  AuthenticatedProvidersProviderIdImport.update({
+    id: '/providers/$providerId',
+    path: '/providers/$providerId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+
+const AuthenticatedOrdersOrderIdRoute = AuthenticatedOrdersOrderIdImport.update(
+  {
+    id: '/orders/$orderId',
+    path: '/orders/$orderId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any,
+)
+
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
@@ -66,6 +90,27 @@ declare module '@tanstack/react-router' {
       fullPath: ''
       preLoaderRoute: typeof AuthenticatedImport
       parentRoute: typeof rootRoute
+    }
+    '/_authenticated/orders/$orderId': {
+      id: '/_authenticated/orders/$orderId'
+      path: '/orders/$orderId'
+      fullPath: '/orders/$orderId'
+      preLoaderRoute: typeof AuthenticatedOrdersOrderIdImport
+      parentRoute: typeof AuthenticatedImport
+    }
+    '/_authenticated/providers/$providerId': {
+      id: '/_authenticated/providers/$providerId'
+      path: '/providers/$providerId'
+      fullPath: '/providers/$providerId'
+      preLoaderRoute: typeof AuthenticatedProvidersProviderIdImport
+      parentRoute: typeof AuthenticatedImport
+    }
+    '/_authenticated/users/$userId': {
+      id: '/_authenticated/users/$userId'
+      path: '/users/$userId'
+      fullPath: '/users/$userId'
+      preLoaderRoute: typeof AuthenticatedUsersUserIdImport
+      parentRoute: typeof AuthenticatedImport
     }
     '/_authenticated/orders/': {
       id: '/_authenticated/orders/'
@@ -94,12 +139,18 @@ declare module '@tanstack/react-router' {
 // Create and export the route tree
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedOrdersOrderIdRoute: typeof AuthenticatedOrdersOrderIdRoute
+  AuthenticatedProvidersProviderIdRoute: typeof AuthenticatedProvidersProviderIdRoute
+  AuthenticatedUsersUserIdRoute: typeof AuthenticatedUsersUserIdRoute
   AuthenticatedOrdersIndexRoute: typeof AuthenticatedOrdersIndexRoute
   AuthenticatedProvidersIndexRoute: typeof AuthenticatedProvidersIndexRoute
   AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedOrdersOrderIdRoute: AuthenticatedOrdersOrderIdRoute,
+  AuthenticatedProvidersProviderIdRoute: AuthenticatedProvidersProviderIdRoute,
+  AuthenticatedUsersUserIdRoute: AuthenticatedUsersUserIdRoute,
   AuthenticatedOrdersIndexRoute: AuthenticatedOrdersIndexRoute,
   AuthenticatedProvidersIndexRoute: AuthenticatedProvidersIndexRoute,
   AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,
@@ -112,6 +163,9 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '': typeof AuthenticatedRouteWithChildren
+  '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
+  '/providers/$providerId': typeof AuthenticatedProvidersProviderIdRoute
+  '/users/$userId': typeof AuthenticatedUsersUserIdRoute
   '/orders': typeof AuthenticatedOrdersIndexRoute
   '/providers': typeof AuthenticatedProvidersIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
@@ -120,6 +174,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '': typeof AuthenticatedRouteWithChildren
+  '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
+  '/providers/$providerId': typeof AuthenticatedProvidersProviderIdRoute
+  '/users/$userId': typeof AuthenticatedUsersUserIdRoute
   '/orders': typeof AuthenticatedOrdersIndexRoute
   '/providers': typeof AuthenticatedProvidersIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
@@ -129,6 +186,9 @@ export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/_authenticated/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
+  '/_authenticated/providers/$providerId': typeof AuthenticatedProvidersProviderIdRoute
+  '/_authenticated/users/$userId': typeof AuthenticatedUsersUserIdRoute
   '/_authenticated/orders/': typeof AuthenticatedOrdersIndexRoute
   '/_authenticated/providers/': typeof AuthenticatedProvidersIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
@@ -136,13 +196,32 @@ export interface FileRoutesById {
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '' | '/orders' | '/providers' | '/users'
+  fullPaths:
+    | '/'
+    | ''
+    | '/orders/$orderId'
+    | '/providers/$providerId'
+    | '/users/$userId'
+    | '/orders'
+    | '/providers'
+    | '/users'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '' | '/orders' | '/providers' | '/users'
+  to:
+    | '/'
+    | ''
+    | '/orders/$orderId'
+    | '/providers/$providerId'
+    | '/users/$userId'
+    | '/orders'
+    | '/providers'
+    | '/users'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/_authenticated/orders/$orderId'
+    | '/_authenticated/providers/$providerId'
+    | '/_authenticated/users/$userId'
     | '/_authenticated/orders/'
     | '/_authenticated/providers/'
     | '/_authenticated/users/'
@@ -179,10 +258,25 @@ export const routeTree = rootRoute
     "/_authenticated": {
       "filePath": "_authenticated.tsx",
       "children": [
+        "/_authenticated/orders/$orderId",
+        "/_authenticated/providers/$providerId",
+        "/_authenticated/users/$userId",
         "/_authenticated/orders/",
         "/_authenticated/providers/",
         "/_authenticated/users/"
       ]
+    },
+    "/_authenticated/orders/$orderId": {
+      "filePath": "_authenticated/orders/$orderId.tsx",
+      "parent": "/_authenticated"
+    },
+    "/_authenticated/providers/$providerId": {
+      "filePath": "_authenticated/providers/$providerId.tsx",
+      "parent": "/_authenticated"
+    },
+    "/_authenticated/users/$userId": {
+      "filePath": "_authenticated/users/$userId.tsx",
+      "parent": "/_authenticated"
     },
     "/_authenticated/orders/": {
       "filePath": "_authenticated/orders/index.tsx",

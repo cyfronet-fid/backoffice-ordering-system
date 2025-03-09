@@ -1,10 +1,10 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 
 from backend.db import get_session
-from backend.models.tables import Provider
+from backend.models.tables import Provider, ProviderPublic, ProviderPublicWithDetails
 
 router = APIRouter(
     prefix="/providers",
@@ -12,7 +12,15 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=list[Provider], operation_id="readProviders")
+@router.get("/", response_model=list[ProviderPublic], operation_id="readProviders")
 def read_providers(session: Annotated[Session, Depends(get_session)]):  # type: ignore
     providers = session.exec(select(Provider)).all()
     return providers
+
+
+@router.get("/{provider_id}", response_model=ProviderPublicWithDetails, operation_id="getProviderById")
+def get_user_by_id(provider_id: int, session: Annotated[Session, Depends(get_session)]):  # type: ignore
+    provider = session.get(Provider, provider_id)
+    if not provider:
+        raise HTTPException(status_code=404, detail="Provider not found")
+    return provider

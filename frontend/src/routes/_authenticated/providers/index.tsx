@@ -1,5 +1,5 @@
-import { Provider, readProviders } from "@/client";
-import { ProvidersTable } from "@/components/providersTable.tsx";
+import { ProviderPublic, readProviders } from "@/client";
+import { ProvidersTable } from "@/components/provider/providersTable.tsx";
 import { getAuthorizationHeader } from "@/utils.ts";
 import { Heading } from "@chakra-ui/react";
 import { createFileRoute } from "@tanstack/react-router";
@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/providers/")({
 });
 
 function Providers() {
-  const providers: Provider[] = Route.useLoaderData();
+  const providers: ProviderPublic[] = Route.useLoaderData();
   return (
     <>
       <Heading mb={2}>Providers</Heading>

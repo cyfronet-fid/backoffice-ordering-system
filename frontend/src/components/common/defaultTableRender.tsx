@@ -3,8 +3,10 @@ import { flexRender, Table as TanStackTable } from "@tanstack/react-table";
 
 interface Props<T> {
   table: TanStackTable<T>;
+  rowHook?: (object: T) => void;
 }
-export function DefaultTableRender<T>({ table }: Props<T>) {
+
+export function DefaultTableRender<T>({ rowHook, table }: Props<T>) {
   return (
     <>
       <div className="p-2">
@@ -27,7 +29,13 @@ export function DefaultTableRender<T>({ table }: Props<T>) {
           </Thead>
           <Tbody>
             {table.getRowModel().rows.map((row) => (
-              <Tr key={row.id}>
+              <Tr
+                key={row.id}
+                onClick={rowHook ? () => rowHook(row.original) : undefined}
+                _hover={
+                  rowHook ? { cursor: "pointer", bg: "gray.100" } : undefined
+                }
+              >
                 {row.getVisibleCells().map((cell) => (
                   <Td key={cell.id}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}

@@ -6,7 +6,7 @@ from sqlmodel import Session, select
 
 from backend.auth import current_user
 from backend.db import get_session
-from backend.models.tables import User, UserCreate, UserPublic
+from backend.models.tables import User, UserCreate, UserPublic, UserPublicWithEmployers
 
 router = APIRouter(
     prefix="/users",
@@ -14,20 +14,20 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=list[User], operation_id="readUsers")
+@router.get("/", response_model=list[UserPublic], operation_id="readUsers")
 def read_users(session: Annotated[Session, Depends(get_session)]):  # type: ignore
     users = session.exec(select(User)).all()
     return users
 
 
-@router.get("/me", response_model=User, operation_id="getCurrentUser")
+@router.get("/me", response_model=UserPublic, operation_id="getCurrentUser")
 def get_current_user(user: Annotated[User, Depends(current_user)]):  # type: ignore
     return user
 
 
-@router.get("/{user_id}", response_model=User, operation_id="getUserById")
+@router.get("/{user_id}", response_model=UserPublicWithEmployers, operation_id="getUserById")
 def get_user_by_id(user_id: int, session: Annotated[Session, Depends(get_session)]):  # type: ignore
-    user = session.exec(select(User).where(User.id == user_id)).first()
+    user = session.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
