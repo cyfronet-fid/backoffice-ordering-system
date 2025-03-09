@@ -1,9 +1,8 @@
+import { OrdersIcon } from "@/components/common/icons/ordersIcon.tsx";
+import { ProvidersIcon } from "@/components/common/icons/providersIcon.tsx";
+import { UsersIcon } from "@/components/common/icons/usersIcon.tsx";
 import { VStack, Flex, Text, Box } from "@chakra-ui/react";
 import { Link as RouterLink } from "@tanstack/react-router";
-
-import { OrdersIcon } from "../common/icons/ordersIcon.tsx";
-import { ProvidersIcon } from "../common/icons/providersIcon.tsx";
-import { UsersIcon } from "../common/icons/usersIcon.tsx";
 
 export const Nav = () => (
   <VStack spacing="2" align="stretch" p="4" height="100%">

@@ -32,10 +32,7 @@ class OrderStatus(str, enum.Enum):
     CANCELLED = "cancelled"
 
 
-class Order(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
+class OrderBase(SQLModel):
     external_ref: str = Field(unique=True, nullable=False)
     project_ref: str = Field(nullable=False)
     status: OrderStatus = Field(default=OrderStatus.SUBMITTED, nullable=False)
@@ -44,6 +41,26 @@ class Order(SQLModel, table=True):
     resource_ref: str = Field(nullable=False)
     resource_type: str = Field(nullable=False)
     resource_name: str = Field(nullable=False)
+
+
+class OrderPublic(OrderBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class OrderCreate(OrderBase):
+    pass
+
+
+class OrderPublicWithProviders(OrderPublic):
+    providers: list["ProviderPublic"] = []
+
+
+class Order(OrderBase, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
 
     messages: list["Message"] = Relationship(back_populates="order", cascade_delete=True)
     users: list["User"] = Relationship(back_populates="orders", link_model=UserOrderLink)
@@ -74,6 +91,10 @@ class UserCreate(UserBase):
     pass
 
 
+class UserPublicWithEmployers(UserPublic):
+    employers: list["ProviderPublic"] = []
+
+
 class User(UserBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
@@ -84,10 +105,26 @@ class User(UserBase, table=True):
     employers: list["Provider"] = Relationship(back_populates="managers", link_model=UserProviderLink)
 
 
-class Message(SQLModel, table=True):
+### Message
+class MessageBase(SQLModel):
+    content: str = Field(min_length=1, nullable=False)
+
+
+class MessagePublic(MessageBase):
+    id: int
+    created_at: datetime
+
+    author: UserPublic
+    order: OrderPublic
+
+
+class MessageCreate(MessageBase):
+    order_id: int
+
+
+class Message(MessageBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
-    content: str = Field(min_length=1, nullable=False)
 
     author_id: int | None = Field(default=None, foreign_key="user.id", ondelete="CASCADE")
     author: User | None = Relationship(back_populates="messages")
@@ -96,11 +133,25 @@ class Message(SQLModel, table=True):
     order: Order | None = Relationship(back_populates="messages")
 
 
-class Provider(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
+### Provider
+class ProviderBase(SQLModel):
     name: str = Field(nullable=False, min_length=1)
     website: str = Field(nullable=False, min_length=1)
+
+
+class ProviderPublic(ProviderBase):
+    id: int
+    created_at: datetime
+
+
+class ProviderPublicWithDetails(ProviderPublic):
+    managers: list[UserPublic] = []
+    orders: list[OrderPublic] = []
+
+
+class Provider(ProviderBase, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
 
     managers: list[User] = Relationship(back_populates="employers", link_model=UserProviderLink)
     orders: list[Order] = Relationship(back_populates="providers", link_model=OrderProviderLink)

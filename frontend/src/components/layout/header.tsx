@@ -1,8 +1,7 @@
-import { Button, Flex, Text } from "@chakra-ui/react";
+import { UserIcon } from "@/components/common/icons/userIcon.tsx";
+import { Logo } from "@/components/layout/logo.tsx";
+import { Button, Flex, Link, Text } from "@chakra-ui/react";
 import { useAuth } from "react-oidc-context";
-
-import { UserIcon } from "../common/icons/userIcon.tsx";
-import { Logo } from "./logo.tsx";
 
 export const Header = () => {
   const auth = useAuth();
@@ -13,14 +12,18 @@ export const Header = () => {
       justify="space-between"
       px="6"
       height="100%"
-      bg="gray.200"
+      bg={auth.isAuthenticated ? "gray.200" : "white"}
     >
       <Logo />
-      <Flex align={"center"} gap={2}>
-        <UserIcon />
-        <Text>{auth.user?.profile?.name}</Text>
-        <Button onClick={() => void auth.signoutRedirect()}>Logout</Button>
-      </Flex>
+      {auth.isAuthenticated ? (
+        <Flex align={"center"} gap={2}>
+          <UserIcon />
+          <Text fontWeight="bold">{auth.user?.profile?.name}</Text>
+          <Button onClick={() => void auth.signoutRedirect()}>Logout</Button>
+        </Flex>
+      ) : (
+        <Link onClick={() => void auth.signinRedirect()}>Log in</Link>
+      )}
     </Flex>
   );
 };

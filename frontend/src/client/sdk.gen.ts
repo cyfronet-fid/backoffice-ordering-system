@@ -9,8 +9,20 @@ import { client as _heyApiClient } from "./client.gen";
 import type {
   ReadOrdersData,
   ReadOrdersResponse,
+  GetOrderByIdData,
+  GetOrderByIdResponse,
+  GetOrderByIdError,
+  GetOrderMessagesData,
+  GetOrderMessagesResponse,
+  GetOrderMessagesError,
+  ChangeOrderStatusData,
+  ChangeOrderStatusResponse,
+  ChangeOrderStatusError,
   ReadUsersData,
   ReadUsersResponse,
+  CreateUserData,
+  CreateUserResponse,
+  CreateUserError,
   GetCurrentUserData,
   GetCurrentUserResponse,
   GetUserByIdData,
@@ -18,8 +30,14 @@ import type {
   GetUserByIdError,
   ReadProvidersData,
   ReadProvidersResponse,
+  GetProviderByIdData,
+  GetProviderByIdResponse,
+  GetProviderByIdError,
   ReadMessagesData,
   ReadMessagesResponse,
+  CreateMessageData,
+  CreateMessageResponse,
+  CreateMessageError,
   ReadRootGetData,
   ReadRootGetResponse,
 } from "./types.gen";
@@ -59,6 +77,72 @@ export const readOrders = <ThrowOnError extends boolean = false>(
 };
 
 /**
+ * Get Order By Id
+ */
+export const getOrderById = <ThrowOnError extends boolean = false>(
+  options: Options<GetOrderByIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<
+    GetOrderByIdResponse,
+    GetOrderByIdError,
+    ThrowOnError
+  >({
+    security: [
+      {
+        scheme: "bearer",
+        type: "http",
+      },
+    ],
+    url: "/orders/{order_id}",
+    ...options,
+  });
+};
+
+/**
+ * Get Order Messages
+ */
+export const getOrderMessages = <ThrowOnError extends boolean = false>(
+  options: Options<GetOrderMessagesData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<
+    GetOrderMessagesResponse,
+    GetOrderMessagesError,
+    ThrowOnError
+  >({
+    security: [
+      {
+        scheme: "bearer",
+        type: "http",
+      },
+    ],
+    url: "/orders/{order_id}/messages",
+    ...options,
+  });
+};
+
+/**
+ * Change Order Status
+ */
+export const changeOrderStatus = <ThrowOnError extends boolean = false>(
+  options: Options<ChangeOrderStatusData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    ChangeOrderStatusResponse,
+    ChangeOrderStatusError,
+    ThrowOnError
+  >({
+    security: [
+      {
+        scheme: "bearer",
+        type: "http",
+      },
+    ],
+    url: "/orders/{order_id}/change_status",
+    ...options,
+  });
+};
+
+/**
  * Read Users
  */
 export const readUsers = <ThrowOnError extends boolean = false>(
@@ -77,6 +161,32 @@ export const readUsers = <ThrowOnError extends boolean = false>(
     ],
     url: "/users/",
     ...options,
+  });
+};
+
+/**
+ * Create User
+ */
+export const createUser = <ThrowOnError extends boolean = false>(
+  options: Options<CreateUserData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    CreateUserResponse,
+    CreateUserError,
+    ThrowOnError
+  >({
+    security: [
+      {
+        scheme: "bearer",
+        type: "http",
+      },
+    ],
+    url: "/users/",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options?.headers,
+    },
   });
 };
 
@@ -147,6 +257,28 @@ export const readProviders = <ThrowOnError extends boolean = false>(
 };
 
 /**
+ * Get User By Id
+ */
+export const getProviderById = <ThrowOnError extends boolean = false>(
+  options: Options<GetProviderByIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<
+    GetProviderByIdResponse,
+    GetProviderByIdError,
+    ThrowOnError
+  >({
+    security: [
+      {
+        scheme: "bearer",
+        type: "http",
+      },
+    ],
+    url: "/providers/{provider_id}",
+    ...options,
+  });
+};
+
+/**
  * Read Messages
  */
 export const readMessages = <ThrowOnError extends boolean = false>(
@@ -165,6 +297,32 @@ export const readMessages = <ThrowOnError extends boolean = false>(
     ],
     url: "/messages/",
     ...options,
+  });
+};
+
+/**
+ * Create Message
+ */
+export const createMessage = <ThrowOnError extends boolean = false>(
+  options: Options<CreateMessageData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    CreateMessageResponse,
+    CreateMessageError,
+    ThrowOnError
+  >({
+    security: [
+      {
+        scheme: "bearer",
+        type: "http",
+      },
+    ],
+    url: "/messages/",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options?.headers,
+    },
   });
 };
 
