@@ -1,22 +1,25 @@
 import re
+from secrets import compare_digest
 from typing import Annotated, Any
 
 import jwt
 from fastapi import Depends, HTTPException
-from fastapi.security import OpenIdConnect
+from fastapi.security import APIKeyHeader, OpenIdConnect
 from sqlmodel import Session, select
 
 from backend.config import get_settings
 from backend.db import get_session
 from backend.models.tables import User, UserType
 
-oidc = OpenIdConnect(openIdConnectUrl=get_settings().keycloak_connection_string)
+oidc_scheme = OpenIdConnect(openIdConnectUrl=get_settings().keycloak_connection_string)
+header_scheme = APIKeyHeader(name="x-key")
+
 jwks_client = jwt.PyJWKClient(get_settings().keycloak_jwks_uri)
 
-BEARER_PATTERN = re.compile(r"^Bearer: ([A-Za-z0-9\-_.]+)$")
+BEARER_PATTERN = re.compile(r"^Bearer ([A-Za-z0-9\-_.]+)$")
 
 
-def verify_token(raw_token: Annotated[str, Depends(oidc)]) -> dict[str, Any]:
+def verify_token(raw_token: Annotated[str, Depends(oidc_scheme)]) -> dict[str, Any]:
     match = BEARER_PATTERN.match(raw_token)
     if not match:
         raise HTTPException(status_code=401, detail="Invalid authentication token format")
@@ -41,6 +44,15 @@ def verify_token(raw_token: Annotated[str, Depends(oidc)]) -> dict[str, Any]:
         raise HTTPException(status_code=401, detail="Token has expired") from e
     except jwt.InvalidTokenError as e:
         raise HTTPException(status_code=401, detail="Invalid token") from e
+
+
+def verify_api_key(api_key: str = Depends(header_scheme)) -> None:
+    expected_key = get_settings().api_key
+    if not api_key or not compare_digest(api_key, expected_key):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or missing API Key",
+        )
 
 
 def current_user(

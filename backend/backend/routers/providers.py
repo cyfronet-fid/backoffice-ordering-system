@@ -3,12 +3,14 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 
+from backend.auth import current_user
 from backend.db import get_session
 from backend.models.tables import Provider, ProviderPublic, ProviderPublicWithDetails
 
 router = APIRouter(
     prefix="/providers",
     tags=["providers"],
+    dependencies=[Depends(current_user)],
 )
 
 

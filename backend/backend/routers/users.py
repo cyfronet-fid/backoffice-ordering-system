@@ -11,6 +11,7 @@ from backend.models.tables import User, UserCreate, UserPublic, UserPublicWithEm
 router = APIRouter(
     prefix="/users",
     tags=["users"],
+    dependencies=[Depends(current_user)],
 )
 
 
@@ -43,6 +44,6 @@ def create_user(user: UserCreate, session: Annotated[Session, Depends(get_sessio
         session.refresh(db_user)
     except IntegrityError as e:
         session.rollback()
-        raise HTTPException(status_code=409) from e
+        raise HTTPException(status_code=409, detail="User already exists") from e
 
     return db_user
