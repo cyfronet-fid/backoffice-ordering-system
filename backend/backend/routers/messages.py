@@ -11,6 +11,7 @@ from backend.models.tables import Message, MessageCreate, MessagePublic, User
 router = APIRouter(
     prefix="/messages",
     tags=["messages"],
+    dependencies=[Depends(current_user)],
 )
 
 

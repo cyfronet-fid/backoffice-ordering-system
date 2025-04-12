@@ -2,7 +2,8 @@ import enum
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import ARRAY, JSON, Column, String
+from sqlalchemy import JSON, Column, String
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlmodel import Enum, Field, Relationship, SQLModel
 
 
@@ -122,6 +123,10 @@ class MessageCreate(MessageBase):
     order_id: int
 
 
+class MessageCreateAPI(MessageCreate):
+    user_id: int
+
+
 class Message(MessageBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
@@ -135,8 +140,12 @@ class Message(MessageBase, table=True):
 
 ### Provider
 class ProviderBase(SQLModel):
-    name: str = Field(nullable=False, min_length=1)
+    name: str = Field(nullable=False, min_length=1, unique=True)
     website: str = Field(nullable=False, min_length=1)
+
+
+class ProviderCreate(ProviderBase):
+    manager_ids: list[int] = Field(min_length=1)
 
 
 class ProviderPublic(ProviderBase):

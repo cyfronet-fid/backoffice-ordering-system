@@ -3,13 +3,15 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 
+from backend.auth import current_user
 from backend.const import ORDER_STATUS_STATE_MACHINE
 from backend.db import get_session
-from backend.models.tables import MessagePublic, Order, OrderPublic, OrderPublicWithProviders, OrderStatus
+from backend.models.tables import Message, MessagePublic, Order, OrderPublic, OrderPublicWithProviders, OrderStatus
 
 router = APIRouter(
     prefix="/orders",
     tags=["orders"],
+    dependencies=[Depends(current_user)],
 )
 
 
@@ -29,8 +31,9 @@ def get_order_by_id(order_id: int, session: Annotated[Session, Depends(get_sessi
 
 @router.get("/{order_id}/messages", response_model=list[MessagePublic], operation_id="getOrderMessages")
 def get_order_messages(order_id: int, session: Annotated[Session, Depends(get_session)]):  # type: ignore
-    # TODO: Below might be non-ideal in terms of performance - probably it's best to sort in SQL
-    return sorted(get_order_by_id(order_id, session).messages, key=lambda message: message.created_at)
+    sql = select(Message).where(Message.order_id == order_id).order_by(Message.created_at)  # type: ignore
+    messages = session.scalars(sql).all()
+    return messages
 
 
 @router.post("/{order_id}/change_status", response_model=OrderPublic, operation_id="changeOrderStatus")
