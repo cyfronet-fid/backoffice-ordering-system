@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     keycloak_host: str = "https://keycloak.docker-fid.grid.cyf-kr.edu.pl"
     keycloak_realm: str = "core"
     keycloak_client_id: str = "bos"
+    api_key: str  # no default value is a best-practice here
+    whitelabel_endpoint: str = "http://localhost:5000"
+    whitelabel_client_key: str = ""
 
     @property
     def db_connection_string(self) -> str:
@@ -35,4 +38,4 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()
+    return Settings()  # type: ignore
