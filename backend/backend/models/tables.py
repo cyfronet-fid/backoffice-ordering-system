@@ -3,8 +3,8 @@ from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy import JSON, Column, String
-from sqlalchemy.dialects.postgresql import ARRAY
-from sqlmodel import Enum, Field, Relationship, SQLModel
+from sqlalchemy.dialects.postgresql import ARRAY, ENUM
+from sqlmodel import Field, Relationship, SQLModel
 
 
 ### Link (join) tables
@@ -62,6 +62,7 @@ class Order(OrderBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
+    synced: bool = Field(default=True, nullable=False)
 
     messages: list["Message"] = Relationship(back_populates="order", cascade_delete=True)
     users: list["User"] = Relationship(back_populates="orders", link_model=UserOrderLink)
@@ -79,7 +80,7 @@ class UserType(str, enum.Enum):
 class UserBase(SQLModel):
     name: str = Field(nullable=False, min_length=1)
     email: str = Field(nullable=False, unique=True, regex=r"^\S+@\S+\.\S+$")
-    user_type: list[UserType] = Field(sa_column=Column(ARRAY(Enum(UserType)), nullable=False), min_length=1)
+    user_type: list[UserType] = Field(sa_column=Column(ARRAY(ENUM(UserType)), nullable=False), min_length=1)
 
 
 class UserPublic(UserBase):
@@ -107,8 +108,14 @@ class User(UserBase, table=True):
 
 
 ### Message
+class MessageScope(str, enum.Enum):
+    PRIVATE = "private"
+    PUBLIC = "public"
+
+
 class MessageBase(SQLModel):
     content: str = Field(min_length=1, nullable=False)
+    scope: MessageScope = Field(sa_column=Column(ENUM(MessageScope), nullable=False), default=MessageScope.PRIVATE)
 
 
 class MessagePublic(MessageBase):
@@ -130,6 +137,7 @@ class MessageCreateAPI(MessageCreate):
 class Message(MessageBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
+    synced: bool = Field(default=True, nullable=False)
 
     author_id: int | None = Field(default=None, foreign_key="user.id", ondelete="CASCADE")
     author: User | None = Relationship(back_populates="messages")

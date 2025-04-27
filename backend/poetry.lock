@@ -1310,6 +1310,22 @@ files = [
 pbr = ">=2.0.0"
 
 [[package]]
+name = "tenacity"
+version = "9.1.2"
+description = "Retry code until it succeeds"
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+files = [
+    {file = "tenacity-9.1.2-py3-none-any.whl", hash = "sha256:f77bf36710d8b73a50b2dd155c97b870017ad21afe6ab300326b0371b3b05138"},
+    {file = "tenacity-9.1.2.tar.gz", hash = "sha256:1169d376c297e7de388d18b4481760d478b0e99a777cad3a9c86e556f4b697cb"},
+]
+
+[package.extras]
+doc = ["reno", "sphinx"]
+test = ["pytest", "tornado (>=4.5)", "typeguard"]
+
+[[package]]
 name = "tomlkit"
 version = "0.13.2"
 description = "Style preserving TOML library"
@@ -1386,4 +1402,4 @@ standard = ["colorama (>=0.4)", "httptools (>=0.6.3)", "python-dotenv (>=0.13)",
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12.0"
-content-hash = "bbb0f461696d37b39bd7a6db6ff6c30e13a6b632fb1b9fcae2b85b969ad73dd1"
+content-hash = "6e4a7ad7302138f6ee27d8690f2898fec0754cfa8bd2bfdb12eb39ff4f15b52f"

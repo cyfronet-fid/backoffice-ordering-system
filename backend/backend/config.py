@@ -17,7 +17,9 @@ class Settings(BaseSettings):
     keycloak_client_id: str = "bos"
     api_key: str  # no default value is a best-practice here
     whitelabel_endpoint: str = "http://localhost:5000"
-    whitelabel_client_key: str = ""
+    whitelabel_client_key: str = ""  # Most likely the API Key of the SOMBO user in Whitelabel
+    whitelabel_max_retry_delay_s: int = 60
+    whitelabel_default_oms_id: int = 1
 
     @property
     def db_connection_string(self) -> str:

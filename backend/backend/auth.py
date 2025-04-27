@@ -8,7 +8,7 @@ from fastapi.security import APIKeyHeader, OpenIdConnect
 from sqlmodel import Session, select
 
 from backend.config import get_settings
-from backend.db import get_session
+from backend.db import get_session_dep
 from backend.models.tables import User, UserType
 
 oidc_scheme = OpenIdConnect(openIdConnectUrl=get_settings().keycloak_connection_string)
@@ -56,7 +56,7 @@ def verify_api_key(api_key: str = Depends(header_scheme)) -> None:
 
 
 def current_user(
-    token: Annotated[dict[str, Any], Depends(verify_token)], session: Annotated[Session, Depends(get_session)]
+    token: Annotated[dict[str, Any], Depends(verify_token)], session: Annotated[Session, Depends(get_session_dep)]
 ) -> User:
     name = token["name"]
     email = token["email"]

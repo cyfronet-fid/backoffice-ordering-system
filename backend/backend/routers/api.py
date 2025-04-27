@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, and_, select
 
 from backend.auth import verify_api_key
-from backend.db import get_session
+from backend.db import get_session_dep
 from backend.models.tables import (
     Message,
     MessageCreateAPI,
@@ -28,7 +28,7 @@ router = APIRouter(prefix="/api", tags=["api"], dependencies=[Depends(verify_api
 @router.post("/providers", response_model=ProviderPublicWithDetails, operation_id="apiCreateProvider")
 def create_provider(  # type: ignore
     provider_payload: ProviderCreate,
-    session: Annotated[Session, Depends(get_session)],
+    session: Annotated[Session, Depends(get_session_dep)],
 ):
     sql = select(User).where(
         and_(
@@ -62,7 +62,7 @@ def create_provider(  # type: ignore
 @router.post("/messages", response_model=MessagePublic, operation_id="apiCreateMessage")
 def create_message(  # type: ignore
     message_payload: MessageCreateAPI,
-    session: Annotated[Session, Depends(get_session)],
+    session: Annotated[Session, Depends(get_session_dep)],
 ):
     user = session.get(User, message_payload.user_id)
     if not user:
@@ -87,7 +87,7 @@ def create_message(  # type: ignore
 @router.post("/orders", response_model=OrderPublic, operation_id="apiCreateOrder")
 def create_order(  # type: ignore
     order_payload: OrderCreate,
-    session: Annotated[Session, Depends(get_session)],
+    session: Annotated[Session, Depends(get_session_dep)],
 ):
     db_order = Order(**order_payload.model_dump())
 
