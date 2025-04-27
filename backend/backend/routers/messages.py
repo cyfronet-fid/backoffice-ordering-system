@@ -1,24 +1,19 @@
 from typing import Annotated
 
-from fastapi import APIRouter, BackgroundTasks, Depends
-from sqlmodel import Session, select
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from sqlmodel import Session
 
 import backend.services.call_whitelabel as wl
 from backend.auth import current_user
 from backend.db import get_session_dep
-from backend.models.tables import Message, MessageCreate, MessagePublic, MessageScope, User, UserType
+from backend.models.tables import Message, MessageCreate, MessagePublic, MessageScope, Order, User
+from backend.utils import get_whitelabel_role
 
 router = APIRouter(
     prefix="/messages",
     tags=["messages"],
     dependencies=[Depends(current_user)],
 )
-
-
-@router.get("/", response_model=list[MessagePublic], operation_id="readMessages")
-def read_messages(session: Annotated[Session, Depends(get_session_dep)]):  # type: ignore
-    messages = session.exec(select(Message)).all()
-    return messages
 
 
 @router.post("/", response_model=MessagePublic, operation_id="createMessage")
@@ -28,6 +23,14 @@ def create_message(  # type: ignore
     session: Annotated[Session, Depends(get_session_dep)],
     background_tasks: BackgroundTasks,
 ):
+    order: Order = session.get(Order, message.order_id)  # type: ignore
+
+    if not order:
+        raise HTTPException(status_code=404, detail=f"Order {message.order_id} not found")
+
+    if not user.has_access_to_order(order):
+        raise HTTPException(status_code=403, detail=f"You cannot create messages for order {message.order_id}")
+
     db_message = Message(
         content=message.content,
         order_id=message.order_id,
@@ -44,8 +47,7 @@ def create_message(  # type: ignore
         background_tasks.add_task(
             wl.post_message,
             message_id=message_id,
-            # TODO: adjust according to frontend view - for now the "strongest" (coordinator) role takes precedent
-            send_as=UserType.COORDINATOR if UserType.COORDINATOR in user.user_type else UserType.PROVIDER_MANAGER,
+            send_as=get_whitelabel_role(user),
         )
 
     return db_message

@@ -4,6 +4,7 @@ from backend.config import get_settings
 from backend.db import get_session
 from backend.models.tables import Message, Order, UserType
 from backend.services.call_whitelabel import change_order_status, post_message
+from backend.utils import get_whitelabel_role
 from scripts.utils import run_command
 
 
@@ -32,11 +33,7 @@ def retry_sync() -> None:
 
     with get_session() as session:
         unsync_messages = session.exec(select(Message).where(Message.synced == False)).all()
-        unsync_messages_send_as = [
-            # "strongest" (coordinator) role takes precedent
-            UserType.COORDINATOR if UserType.COORDINATOR in m.author.user_type else UserType.PROVIDER_MANAGER
-            for m in unsync_messages
-        ]
+        unsync_messages_send_as = [get_whitelabel_role(m.author) for m in unsync_messages]
 
     for m, send_as in zip(unsync_messages, unsync_messages_send_as):
         print(f"Syncing message {m.id}...")
