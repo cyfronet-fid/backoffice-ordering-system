@@ -82,6 +82,15 @@ class UserBase(SQLModel):
     email: str = Field(nullable=False, unique=True, regex=r"^\S+@\S+\.\S+$")
     user_type: list[UserType] = Field(sa_column=Column(ARRAY(ENUM(UserType)), nullable=False), min_length=1)
 
+    def is_admin(self) -> bool:
+        return UserType.ADMIN in self.user_type
+
+    def is_coordinator(self) -> bool:
+        return UserType.COORDINATOR in self.user_type
+
+    def is_provider_manager(self) -> bool:
+        return UserType.PROVIDER_MANAGER in self.user_type
+
 
 class UserPublic(UserBase):
     id: int
@@ -105,6 +114,19 @@ class User(UserBase, table=True):
     messages: list["Message"] = Relationship(back_populates="author", cascade_delete=True)
     orders: list[Order] = Relationship(back_populates="users", link_model=UserOrderLink)
     employers: list["Provider"] = Relationship(back_populates="managers", link_model=UserProviderLink)
+
+    def _has_access_override(self) -> bool:
+        return self.is_admin() or self.is_coordinator()
+
+    def has_access_to_order(self, order: Order) -> bool:
+        return self._has_access_override() or (self.is_provider_manager() and order in self.orders)
+
+    def has_access_to_provider(self, provider: "Provider") -> bool:
+        # NOTE: if provider is user's employer that automatically means that user is provider's manager
+        return self._has_access_override() or (self.is_provider_manager() and provider in self.employers)
+
+    def has_access_to_other_user(self, target_user: "User") -> bool:
+        return self._has_access_override() or self.id == target_user.id
 
 
 ### Message
