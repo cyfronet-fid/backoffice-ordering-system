@@ -24,6 +24,7 @@ pyjwt = {extras = ["crypto"], version = "^2.10.1"}
 urllib3 = "^2.4.0"
 python-dateutil = "^2.9.0.post0"
 typing-extensions = "^4.13.2"
+tenacity = "^9.1.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.3"
@@ -38,7 +39,8 @@ isort = "^5.13.2"
 "db:clear" = "scripts.db:clear"
 lint = "scripts.utils:lint"
 format = "scripts.utils:format_"
-generate-whitelabel-client = "scripts.utils:generate_whitelabel_client"
+"wl:generate-client" = "scripts.whitelabel:generate_client"
+"wl:retry-sync" = "scripts.whitelabel:retry_sync"
 
 
 [tool.pylint.'MESSAGES CONTROL']

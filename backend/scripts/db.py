@@ -1,24 +1,11 @@
-from sqlmodel import Session, create_engine, delete, SQLModel
+from sqlmodel import delete, SQLModel
 
-from backend.config import get_settings
-from backend.models.tables import (
-    Message,
-    Order,
-    OrderStatus,
-    Provider,
-    User,
-    UserType,
-)
-
-
-def _create_engine():
-    return create_engine(get_settings().db_connection_string)
+from backend.db import get_session
+from backend.models.tables import Message, Order, OrderStatus, Provider, User, UserType, MessageScope
 
 
 def seed():
-    engine = _create_engine()
-
-    with Session(engine) as session:
+    with get_session() as session:
         admin = User(name="HAL 9000", email="admin@cyfronet.pl", user_type=[UserType.ADMIN, UserType.COORDINATOR])
         coordinator = User(name="Mr. Uptight", email="coordinator@cyfronet.pl", user_type=[UserType.COORDINATOR])
         alice_provider = User(name="Alice", email="alice@provider.com", user_type=[UserType.PROVIDER_MANAGER])
@@ -52,7 +39,12 @@ def seed():
         )
 
         message1 = Message(content="Ey where my resource at?!", author=joe, order=order1)
-        message2 = Message(content="Worry not, my child. Your access is coming.", author=alice_provider, order=order1)
+        message2 = Message(
+            content="Worry not, my child. Your access is coming.",
+            author=alice_provider,
+            order=order1,
+            scope=MessageScope.PUBLIC,
+        )
         message3 = Message(content="What the hell is going on here?", author=coordinator, order=order1)
 
         order2 = Order(
@@ -81,8 +73,30 @@ def seed():
             providers=[aws_provider],
         )
 
-        message4 = Message(content="The configuration you want is outrageous...", author=alice_provider, order=order2)
+        message4 = Message(
+            content="The configuration you want is outrageous...",
+            author=alice_provider,
+            order=order2,
+            scope=MessageScope.PUBLIC,
+        )
         message5 = Message(content="+1", author=bob_provider, order=order2)
+
+        patryk = User(
+            email="patryk.zbigniew.wojtowicz@gmail.com", name="Patryk Wójtowicz", user_type=[UserType.PROVIDER_MANAGER]
+        )
+        egi = Provider(name="EGI", website="https://egi-federation.com/", managers=[patryk])
+        egi_cloud_compute = Order(
+            external_ref="1",
+            project_ref="1",
+            status=OrderStatus.SUBMITTED,
+            config={"cpus": 256, "memory": 1024, "GPU": "H100"},
+            platforms=["my plat"],
+            resource_ref="egi-cloud-compute",
+            resource_type="order_required",
+            resource_name="EGI Cloud compute",
+            providers=[egi],
+            users=[patryk],
+        )
 
         session.add_all(
             [
@@ -103,15 +117,16 @@ def seed():
                 message3,
                 message4,
                 message5,
+                patryk,
+                egi_cloud_compute,
+                egi,
             ]
         )
         session.commit()
 
 
 def clear():
-    engine = _create_engine()
-
-    with Session(engine) as session:
+    with get_session() as session:
         for table in reversed(SQLModel.metadata.sorted_tables):  # Reverse order to respect FK constraints
             session.exec(delete(table))
         session.commit()

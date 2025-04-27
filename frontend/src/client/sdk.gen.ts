@@ -38,6 +38,15 @@ import type {
   CreateMessageData,
   CreateMessageResponse,
   CreateMessageError,
+  ApiCreateProviderData,
+  ApiCreateProviderResponse,
+  ApiCreateProviderError,
+  ApiCreateMessageData,
+  ApiCreateMessageResponse,
+  ApiCreateMessageError,
+  ApiCreateOrderData,
+  ApiCreateOrderResponse,
+  ApiCreateOrderError,
   ReadRootGetData,
   ReadRootGetResponse,
 } from "./types.gen";
@@ -327,6 +336,84 @@ export const createMessage = <ThrowOnError extends boolean = false>(
 };
 
 /**
+ * Create Provider
+ */
+export const apiCreateProvider = <ThrowOnError extends boolean = false>(
+  options: Options<ApiCreateProviderData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    ApiCreateProviderResponse,
+    ApiCreateProviderError,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: "x-key",
+        type: "apiKey",
+      },
+    ],
+    url: "/api/providers",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options?.headers,
+    },
+  });
+};
+
+/**
+ * Create Message
+ */
+export const apiCreateMessage = <ThrowOnError extends boolean = false>(
+  options: Options<ApiCreateMessageData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    ApiCreateMessageResponse,
+    ApiCreateMessageError,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: "x-key",
+        type: "apiKey",
+      },
+    ],
+    url: "/api/messages",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options?.headers,
+    },
+  });
+};
+
+/**
+ * Create Order
+ */
+export const apiCreateOrder = <ThrowOnError extends boolean = false>(
+  options: Options<ApiCreateOrderData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    ApiCreateOrderResponse,
+    ApiCreateOrderError,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: "x-key",
+        type: "apiKey",
+      },
+    ],
+    url: "/api/orders",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options?.headers,
+    },
+  });
+};
+
+/**
  * Read Root
  */
 export const readRootGet = <ThrowOnError extends boolean = false>(
@@ -337,12 +424,6 @@ export const readRootGet = <ThrowOnError extends boolean = false>(
     unknown,
     ThrowOnError
   >({
-    security: [
-      {
-        scheme: "bearer",
-        type: "http",
-      },
-    ],
     url: "/",
     ...options,
   });

@@ -6,15 +6,39 @@ export type HttpValidationError = {
 
 export type MessageCreate = {
   content: string;
+  scope?: MessageScope;
   order_id: number;
+};
+
+export type MessageCreateApi = {
+  content: string;
+  scope?: MessageScope;
+  order_id: number;
+  user_id: number;
 };
 
 export type MessagePublic = {
   content: string;
+  scope?: MessageScope;
   id: number;
   created_at: string;
   author: UserPublic;
   order: OrderPublic;
+};
+
+export type MessageScope = "private" | "public";
+
+export type OrderCreate = {
+  external_ref: string;
+  project_ref: string;
+  status?: OrderStatus;
+  config: {
+    [key: string]: unknown;
+  };
+  platforms: Array<string>;
+  resource_ref: string;
+  resource_type: string;
+  resource_name: string;
 };
 
 export type OrderPublic = {
@@ -57,6 +81,12 @@ export type OrderStatus =
   | "completed"
   | "rejected"
   | "cancelled";
+
+export type ProviderCreate = {
+  name: string;
+  website: string;
+  manager_ids: Array<number>;
+};
 
 export type ProviderPublic = {
   name: string;
@@ -385,6 +415,87 @@ export type CreateMessageResponses = {
 
 export type CreateMessageResponse =
   CreateMessageResponses[keyof CreateMessageResponses];
+
+export type ApiCreateProviderData = {
+  body: ProviderCreate;
+  path?: never;
+  query?: never;
+  url: "/api/providers";
+};
+
+export type ApiCreateProviderErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ApiCreateProviderError =
+  ApiCreateProviderErrors[keyof ApiCreateProviderErrors];
+
+export type ApiCreateProviderResponses = {
+  /**
+   * Successful Response
+   */
+  200: ProviderPublicWithDetails;
+};
+
+export type ApiCreateProviderResponse =
+  ApiCreateProviderResponses[keyof ApiCreateProviderResponses];
+
+export type ApiCreateMessageData = {
+  body: MessageCreateApi;
+  path?: never;
+  query?: never;
+  url: "/api/messages";
+};
+
+export type ApiCreateMessageErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ApiCreateMessageError =
+  ApiCreateMessageErrors[keyof ApiCreateMessageErrors];
+
+export type ApiCreateMessageResponses = {
+  /**
+   * Successful Response
+   */
+  200: MessagePublic;
+};
+
+export type ApiCreateMessageResponse =
+  ApiCreateMessageResponses[keyof ApiCreateMessageResponses];
+
+export type ApiCreateOrderData = {
+  body: OrderCreate;
+  path?: never;
+  query?: never;
+  url: "/api/orders";
+};
+
+export type ApiCreateOrderErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ApiCreateOrderError =
+  ApiCreateOrderErrors[keyof ApiCreateOrderErrors];
+
+export type ApiCreateOrderResponses = {
+  /**
+   * Successful Response
+   */
+  200: OrderPublic;
+};
+
+export type ApiCreateOrderResponse =
+  ApiCreateOrderResponses[keyof ApiCreateOrderResponses];
 
 export type ReadRootGetData = {
   body?: never;

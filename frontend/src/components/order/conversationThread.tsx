@@ -48,6 +48,7 @@ export function ConversationThread({ messages, orderId }: Props) {
         body: {
           content: messageValue,
           order_id: orderId,
+          scope: sendToUser ? "public" : "private",
         },
       });
       toast({
@@ -112,7 +113,8 @@ export function ConversationThread({ messages, orderId }: Props) {
 
                 <Box fontSize="md">{message.content}</Box>
                 <Box fontSize="xs" color="gray.500" mt={2}>
-                  {new Date(message.created_at!).toLocaleString()}
+                  {new Date(message.created_at!).toLocaleString() +
+                    (message.scope == "public" ? " (sent to the user)" : "")}
                 </Box>
               </Box>
             ))
