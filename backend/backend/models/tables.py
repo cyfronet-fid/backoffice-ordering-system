@@ -50,8 +50,8 @@ class OrderPublic(OrderBase):
     updated_at: datetime
 
 
-class OrderCreate(OrderBase):
-    pass
+class OrderCreateAPI(OrderBase):
+    provider_ids: list[int] = Field(min_length=1)
 
 
 class OrderPublicWithProviders(OrderPublic):
@@ -174,7 +174,7 @@ class ProviderBase(SQLModel):
     website: str = Field(nullable=False, min_length=1)
 
 
-class ProviderCreate(ProviderBase):
+class ProviderCreateAPI(ProviderBase):
     manager_ids: list[int] = Field(min_length=1)
 
 
