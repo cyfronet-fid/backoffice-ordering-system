@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from sqlalchemy.orm import selectinload
 from sqlmodel import Session, select
 
 import backend.services.call_whitelabel as wl
@@ -21,12 +22,14 @@ def _get_order_with_access_check(
     session: Annotated[Session, Depends(get_session_dep)],
     user: Annotated[User, Depends(current_user)],
 ) -> Order:
-    order: Order = session.get(Order, order_id)  # type: ignore
+    statement = select(Order).where(Order.id == order_id).options(selectinload(Order.messages))  # type: ignore
+    order = session.scalars(statement).one_or_none()
+
     if not order:
-        raise HTTPException(status_code=404, detail="Order not found")
+        raise HTTPException(status_code=404, detail=f"Order {order_id} not found")
 
     if not user.has_access_to_order(order):
-        raise HTTPException(status_code=403, detail="You do not have access to this order")
+        raise HTTPException(status_code=403, detail=f"You do not have access to order {order_id}")
 
     return order
 
@@ -63,7 +66,7 @@ def change_order_status(  # type: ignore
     background_tasks: BackgroundTasks,
 ):
     if new_status not in ORDER_STATUS_STATE_MACHINE[order.status]:
-        raise HTTPException(status_code=400, detail="Invalid status transition")
+        raise HTTPException(status_code=400, detail=f"Invalid status transition: {order.status} -> {new_status.name}")
 
     order.status = new_status
 

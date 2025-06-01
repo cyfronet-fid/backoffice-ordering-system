@@ -51,7 +51,7 @@ class OrderPublic(OrderBase):
 
 
 class OrderCreateAPI(OrderBase):
-    provider_ids: list[int] = Field(min_length=1)
+    provider_pids: list[str] = Field(min_length=1)
 
 
 class OrderPublicWithProviders(OrderPublic):
@@ -128,6 +128,12 @@ class User(UserBase, table=True):
     def has_access_to_other_user(self, target_user: "User") -> bool:
         return self._has_access_override() or self.id == target_user.id
 
+    def __hash__(self) -> int:
+        return hash(self.email)
+
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, User) and self.email == other.email
+
 
 ### Message
 class MessageScope(str, enum.Enum):
@@ -152,8 +158,9 @@ class MessageCreate(MessageBase):
     order_id: int
 
 
-class MessageCreateAPI(MessageCreate):
-    user_id: int
+class MessageCreateAPI(MessageBase):
+    user_email: str
+    order_external_ref: str
 
 
 class Message(MessageBase, table=True):
@@ -172,10 +179,11 @@ class Message(MessageBase, table=True):
 class ProviderBase(SQLModel):
     name: str = Field(nullable=False, min_length=1, unique=True)
     website: str = Field(nullable=False, min_length=1)
+    pid: str = Field(nullable=False, unique=True, min_length=1)
 
 
 class ProviderCreateAPI(ProviderBase):
-    manager_ids: list[int] = Field(min_length=1)
+    manager_emails: list[str] = Field(min_length=1)
 
 
 class ProviderPublic(ProviderBase):

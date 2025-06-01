@@ -21,10 +21,10 @@ def _get_user_with_access_check(
 ) -> User:
     target_user: User = session.get(User, user_id)  # type: ignore
     if not target_user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail=f"User {user_id} not found")
 
     if not this_user.has_access_to_other_user(target_user):
-        raise HTTPException(status_code=403, detail="You do not have access to this user")
+        raise HTTPException(status_code=403, detail=f"You do not have access to user {user_id}")
 
     return target_user
 

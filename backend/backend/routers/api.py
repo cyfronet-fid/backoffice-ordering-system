@@ -19,6 +19,8 @@ from backend.models.tables import (
     ProviderCreateAPI,
     ProviderPublicWithDetails,
     User,
+    UserCreate,
+    UserPublic,
     UserType,
 )
 
@@ -32,21 +34,24 @@ def create_provider(  # type: ignore
 ):
     sql = select(User).where(
         and_(
-            User.id.in_(provider_payload.manager_ids),  # type: ignore
+            User.email.in_(provider_payload.manager_emails),  # type: ignore
             User.user_type.contains([UserType.PROVIDER_MANAGER]),  # type: ignore
         )
     )
 
     db_managers = session.scalars(sql).all()
 
-    if len(db_managers) != len(provider_payload.manager_ids):
-        found_ids = {m.id for m in db_managers}
-        missing_ids = set(provider_payload.manager_ids) - found_ids
+    if len(db_managers) != len(provider_payload.manager_emails):
+        found_emails = {m.email for m in db_managers}
+        missing_emails = set(provider_payload.manager_emails) - found_emails
         raise HTTPException(
-            status_code=400, detail=f"Managers {list(missing_ids)} are either missing or not provider managers."
+            status_code=400, detail=f"Managers {list(missing_emails)} are either missing or not provider managers."
         )
 
-    db_provider = Provider(name=provider_payload.name, website=provider_payload.website, managers=db_managers)
+    db_provider = Provider(
+        **provider_payload.model_dump(),
+        managers=db_managers,
+    )
 
     try:
         session.add(db_provider)
@@ -54,9 +59,25 @@ def create_provider(  # type: ignore
         session.refresh(db_provider)
     except IntegrityError as e:
         session.rollback()
-        raise HTTPException(status_code=409, detail="Provider already exists") from e
+        raise HTTPException(status_code=409, detail=f"Provider {provider_payload.pid} already exists") from e
 
     return db_provider
+
+
+@router.post("/users", response_model=UserPublic, operation_id="apiCreateUser")
+def create_user(user_payload: UserCreate, session: Annotated[Session, Depends(get_session_dep)]):  # type: ignore
+    db_user = User(**user_payload.model_dump())
+
+    try:
+        session.add(db_user)
+        session.commit()
+        session.refresh(db_user)
+
+    except IntegrityError as e:
+        session.rollback()
+        raise HTTPException(status_code=409, detail=f"User {user_payload.email} already exists") from e
+
+    return db_user
 
 
 @router.post("/messages", response_model=MessagePublic, operation_id="apiCreateMessage")
@@ -64,18 +85,19 @@ def create_message(  # type: ignore
     message_payload: MessageCreateAPI,
     session: Annotated[Session, Depends(get_session_dep)],
 ):
-    user: User = session.get(User, message_payload.user_id)  # type: ignore
+    user = session.scalars(select(User).where(User.email == message_payload.user_email)).first()
+
     if not user:
-        raise HTTPException(status_code=404, detail=f"User {message_payload.user_id} does not exist.")
+        raise HTTPException(status_code=404, detail=f"User {message_payload.user_email} does not exist.")
 
     if UserType.MP_USER not in user.user_type:
-        raise HTTPException(status_code=400, detail=f"User {message_payload.user_id} is not an MP_USER.")
+        raise HTTPException(status_code=400, detail=f"User {message_payload.user_email} is not an MP_USER.")
 
-    order: Order = session.get(Order, message_payload.order_id)  # type: ignore
+    order = session.scalars(select(Order).where(Order.external_ref == message_payload.order_external_ref)).first()
     if not order:
-        raise HTTPException(status_code=404, detail=f"Order {message_payload.order_id} does not exist.")
+        raise HTTPException(status_code=404, detail=f"Order {message_payload.order_external_ref} does not exist.")
 
-    db_message = Message(author=user, order=order, content=message_payload.content)
+    db_message = Message(**message_payload.model_dump(), author=user, order=order)
 
     # Associate the user with the given order if not already associated
     if user not in order.users:
@@ -93,24 +115,25 @@ def create_order(  # type: ignore
     order_payload: OrderCreateAPI,
     session: Annotated[Session, Depends(get_session_dep)],
 ):
-    sql = select(Provider).where(
-        Provider.id.in_(order_payload.provider_ids),  # type: ignore
-    )
+    sql = select(Provider).where(Provider.pid.in_(order_payload.provider_pids))  # type: ignore
     providers = session.scalars(sql).all()
 
-    if len(providers) != len(order_payload.provider_ids):
-        found_ids = {p.id for p in providers}
-        missing_ids = set(order_payload.provider_ids) - found_ids
-        raise HTTPException(status_code=400, detail=f"Providers {list(missing_ids)} do not exist.")
+    if len(providers) != len(order_payload.provider_pids):
+        found_pids = {p.pid for p in providers}
+        missing_pids = set(order_payload.provider_pids) - found_pids
+        raise HTTPException(status_code=400, detail=f"Providers {list(missing_pids)} do not exist.")
 
-    all_managers = {
-        manager for provider in providers for manager in provider.managers
-    }  # Associate all managers for every provider with this order
+    # Associate all managers for every provider with this order
+    unique_managers = list({manager for provider in providers for manager in provider.managers})
 
-    db_order = Order(**order_payload.model_dump(), providers=providers, users=list(all_managers))
+    db_order = Order(**order_payload.model_dump(), providers=providers, users=unique_managers)
 
-    session.add(db_order)
-    session.commit()
-    session.refresh(db_order)
+    try:
+        session.add(db_order)
+        session.commit()
+        session.refresh(db_order)
+    except IntegrityError as e:
+        session.rollback()
+        raise HTTPException(status_code=409, detail=f"Order {order_payload.external_ref} already exists") from e
 
     return db_order
