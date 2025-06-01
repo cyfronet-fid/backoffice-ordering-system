@@ -17,13 +17,12 @@ def seed():
             name="Google Cloud Platform",
             website="https://cloud.google.com",
             managers=[alice_provider],
+            pid="gcp",
         )
         aws_provider = Provider(
-            name="AWS",
-            website="https://aws.amazon.com",
-            managers=[alice_provider, bob_provider],
+            name="AWS", website="https://aws.amazon.com", managers=[alice_provider, bob_provider], pid="aws"
         )
-        null_provider = Provider(name="Lonely", website="https://example.com")
+        null_provider = Provider(name="Lonely", website="https://example.com", pid="lone")
 
         order1 = Order(
             external_ref="/project/joes_project/order/1",
@@ -82,21 +81,11 @@ def seed():
         message5 = Message(content="+1", author=bob_provider, order=order2)
 
         patryk = User(
-            email="patryk.zbigniew.wojtowicz@gmail.com", name="Patryk Wójtowicz", user_type=[UserType.PROVIDER_MANAGER]
+            email="patryk@gmail.com",
+            name="Patryk",
+            user_type=[UserType.PROVIDER_MANAGER, UserType.MP_USER],
         )
-        egi = Provider(name="EGI", website="https://egi-federation.com/", managers=[patryk])
-        egi_cloud_compute = Order(
-            external_ref="1",
-            project_ref="1",
-            status=OrderStatus.SUBMITTED,
-            config={"cpus": 256, "memory": 1024, "GPU": "H100"},
-            platforms=["my plat"],
-            resource_ref="egi-cloud-compute",
-            resource_type="order_required",
-            resource_name="EGI Cloud compute",
-            providers=[egi],
-            users=[patryk],
-        )
+        egi = Provider(name="EGI", website="https://egi-federation.com/", managers=[patryk], pid="egi-federation")
 
         session.add_all(
             [
@@ -118,7 +107,6 @@ def seed():
                 message4,
                 message5,
                 patryk,
-                egi_cloud_compute,
                 egi,
             ]
         )

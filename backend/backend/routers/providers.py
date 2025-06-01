@@ -21,10 +21,10 @@ def _get_provider_with_access_check(
 ) -> Provider:
     provider: Provider = session.get(Provider, provider_id)  # type: ignore
     if not provider:
-        raise HTTPException(status_code=404, detail="Provider not found")
+        raise HTTPException(status_code=404, detail=f"Provider {provider_id} not found")
 
     if not user.has_access_to_provider(provider):
-        raise HTTPException(status_code=403, detail="You do not have access to this provider")
+        raise HTTPException(status_code=403, detail=f"You do not have access to provider {provider_id}")
 
     return provider
 
