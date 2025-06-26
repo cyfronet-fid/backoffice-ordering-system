@@ -4,7 +4,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import IntegrityError
-from sqlmodel import Session, and_, select
+from sqlmodel import Session, select
 
 from backend.auth import verify_api_key
 from backend.db import get_session_dep
@@ -32,25 +32,26 @@ def create_provider(  # type: ignore
     provider_payload: ProviderCreateAPI,
     session: Annotated[Session, Depends(get_session_dep)],
 ):
-    sql = select(User).where(
-        and_(
-            User.email.in_(provider_payload.manager_emails),  # type: ignore
-            User.user_type.contains([UserType.PROVIDER_MANAGER]),  # type: ignore
-        )
-    )
-
-    db_managers = session.scalars(sql).all()
-
-    if len(db_managers) != len(provider_payload.manager_emails):
-        found_emails = {m.email for m in db_managers}
-        missing_emails = set(provider_payload.manager_emails) - found_emails
-        raise HTTPException(
-            status_code=400, detail=f"Managers {list(missing_emails)} are either missing or not provider managers."
-        )
+    # TODO: Ignore the mail mapping for now
+    # sql = select(User).where(
+    #     and_(
+    #         User.email.in_(provider_payload.manager_emails),  # type: ignore
+    #         User.user_type.contains([UserType.PROVIDER_MANAGER]),  # type: ignore
+    #     )
+    # )
+    #
+    # db_managers = session.scalars(sql).all()
+    #
+    # if len(db_managers) != len(provider_payload.manager_emails):
+    #     found_emails = {m.email for m in db_managers}
+    #     missing_emails = set(provider_payload.manager_emails) - found_emails
+    #     raise HTTPException(
+    #         status_code=400, detail=f"Managers {list(missing_emails)} are either missing or not provider managers."
+    #     )
 
     db_provider = Provider(
         **provider_payload.model_dump(),
-        managers=db_managers,
+        # managers=db_managers,
     )
 
     try:

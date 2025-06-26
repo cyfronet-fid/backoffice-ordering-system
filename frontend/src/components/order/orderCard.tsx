@@ -1,5 +1,6 @@
 import { OrderPublicWithProviders } from "@/client";
 import { StatusTag } from "@/components/common/statusTag.tsx";
+import { snakeToTitle } from "@/utils.ts";
 import {
   Box,
   Code,
@@ -16,6 +17,7 @@ import { Link as RouterLink } from "@tanstack/react-router";
 interface Props {
   order: OrderPublicWithProviders;
 }
+
 export function OrderCard({ order }: Props) {
   return (
     <Box p={6} boxShadow="md" borderRadius="md" bg="white">
@@ -50,12 +52,8 @@ export function OrderCard({ order }: Props) {
             </Td>
           </Tr>
           <Tr>
-            <Td fontWeight="bold">Product Type</Td>
-            <Td>Unknown</Td>
-          </Tr>
-          <Tr>
             <Td fontWeight="bold">Access Type</Td>
-            <Td>Unknown</Td>
+            <Td>{snakeToTitle(order.resource_type)}</Td>
           </Tr>
           <Tr>
             <Td fontWeight="bold">Product</Td>
@@ -87,12 +85,6 @@ export function OrderCard({ order }: Props) {
             <Td fontWeight="bold">Resource reference</Td>
             <Td>
               <Code>{order.resource_ref}</Code>
-            </Td>
-          </Tr>
-          <Tr>
-            <Td fontWeight="bold">External reference</Td>
-            <Td>
-              <Code>{order.external_ref}</Code>
             </Td>
           </Tr>
           <Tr>

@@ -38,3 +38,11 @@ export function useDebouncedValue<T>(value: T, delay: number): T {
 
   return debounced;
 }
+
+export function snakeToTitle(str: string): string {
+  return str
+    .split("_")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+}

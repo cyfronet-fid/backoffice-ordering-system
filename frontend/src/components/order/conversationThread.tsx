@@ -114,7 +114,10 @@ export function ConversationThread({ messages, orderId }: Props) {
                 <Box fontSize="md">{message.content}</Box>
                 <Box fontSize="xs" color="gray.500" mt={2}>
                   {new Date(message.created_at!).toLocaleString() +
-                    (message.scope == "public" ? " (sent to the user)" : "")}
+                    (message.scope == "public" &&
+                    !message.author?.user_type.includes("mp_user")
+                      ? " (sent to the user)"
+                      : "")}
                 </Box>
               </Box>
             ))
