@@ -1,4 +1,6 @@
-from fastapi import FastAPI
+from typing import Any
+
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.config import get_settings
@@ -18,10 +20,35 @@ app.include_router(providers.router)
 app.include_router(messages.router)
 app.include_router(api.router)
 
+
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next: Any) -> Any:
+    response = await call_next(request)
+
+    # Content Security Policy - prevents XSS attacks
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline'; "
+        "style-src 'self' 'unsafe-inline'; "
+        "img-src 'self' data:; "
+        "connect-src 'self'"
+    )
+
+    # Prevent clickjacking
+    response.headers["X-Frame-Options"] = "DENY"
+
+    # Prevent MIME type sniffing
+    response.headers["X-Content-Type-Options"] = "nosniff"
+
+    # Control referrer information
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+
+    return response
+
+
 app.add_middleware(
     CORSMiddleware,
-    # TODO: Restrict origin to an exact frontend url (based on env) once I know the DNS
-    allow_origins=["*"],
+    allow_origins=[get_settings().frontend_url],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

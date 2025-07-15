@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     keycloak_realm: str = "core"
     keycloak_client_id: str = "bos"
     api_key: str  # no default value is a best-practice here
+    frontend_url: str = "http://localhost:5173"
     whitelabel_endpoint: str = "http://localhost:5000"
     whitelabel_client_key: str = ""  # Most likely the API Key of the SOMBO user in Whitelabel
     whitelabel_max_retry_delay_s: int = 60

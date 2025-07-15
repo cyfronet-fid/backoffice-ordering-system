@@ -68,10 +68,7 @@ def current_user(
         user = User(
             name=name,
             email=email,
-            # TODO: Get the proper role from KeyCloak once it's there
-            #   For, now we can assume anyone there is a project_manager, since other roles will need to be
-            #   filled in the db manually anyway
-            user_type=[UserType.PROVIDER_MANAGER],
+            user_type=[UserType.MP_USER],
         )
         session.add(user)
         session.commit()
