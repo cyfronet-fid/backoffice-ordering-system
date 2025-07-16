@@ -82,11 +82,25 @@ Check `/backend/backend/config.py` for more details.
 
 **NOTE**: They need to be present on the server host/container BEFORE starting the server to be respected.
 
+#### Database Configuration
 - `DB_HOST` - host of the postgres server (default: `localhost`)
 - `DB_PORT` - port of the postgres server (default: `5432`)
 - `DB_USER` - user of the postgres server (default: `pg`)
-- `DB_PASSWORD` - password of the postgres server (default: `pg`), for production this needs to be changes, obviously
-- `DB_NAME` - name of the postgres db (default `postgres`)
+- `DB_PASSWORD` - password of the postgres server (default: `pg`)
+- `DB_NAME` - name of the postgres db (default: `postgres`)
+
+#### Authentication Configuration
+- `API_KEY` - API key for external API access (**REQUIRED**, no default)
+- `KEYCLOAK_HOST` - Keycloak server URL (default: `https://keycloak.docker-fid.grid.cyf-kr.edu.pl`)
+- `KEYCLOAK_REALM` - Keycloak realm name (default: `core`)
+- `KEYCLOAK_CLIENT_ID` - Keycloak client ID (default: `bos`)
+
+#### External Service Configuration
+- `FRONTEND_URL` - Frontend application URL (default: `http://localhost:5173`)
+- `WHITELABEL_ENDPOINT` - Whitelabel service endpoint (default: `http://localhost:5000`)
+- `WHITELABEL_CLIENT_KEY` - Whitelabel API key (default: `""`)
+- `WHITELABEL_MAX_RETRY_DELAY_S` - Maximum retry delay in seconds (default: `60`)
+- `WHITELABEL_DEFAULT_OMS_ID` - Default OMS ID (default: `1`)
 
 ## Frontend
 
@@ -150,4 +164,10 @@ npm run generate-client
 
 **NOTE**: They need to be present to be respected while *building* the app with `npm run build` for production.
 
-- `VITE_BACKEND_URL` - url of the backend server (default: `http://localhost:8000`)
+#### Application Configuration
+- `VITE_BACKEND_URL` - URL of the backend server (default: `http://localhost:8000`)
+
+#### Authentication Configuration
+- `VITE_KEYCLOAK_HOST` - Keycloak server URL (default: `https://keycloak.docker-fid.grid.cyf-kr.edu.pl`)
+- `VITE_KEYCLOAK_REALM` - Keycloak realm name (default: `core`)
+- `VITE_KEYCLOAK_CLIENT_ID` - Keycloak client ID (default: `bos`)
