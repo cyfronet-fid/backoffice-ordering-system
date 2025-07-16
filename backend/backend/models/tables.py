@@ -2,7 +2,7 @@ import enum
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import JSON, Column, String
+from sqlalchemy import JSON, Column, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import ARRAY, ENUM
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -34,7 +34,7 @@ class OrderStatus(str, enum.Enum):
 
 
 class OrderBase(SQLModel):
-    external_ref: str = Field(unique=True, nullable=False)
+    external_ref: str = Field(nullable=False)
     project_ref: str = Field(nullable=False)
     status: OrderStatus = Field(default=OrderStatus.SUBMITTED, nullable=False)
     config: dict[str, Any] = Field(sa_column=Column(JSON, nullable=False))
@@ -59,6 +59,8 @@ class OrderPublicWithProviders(OrderPublic):
 
 
 class Order(OrderBase, table=True):
+    __table_args__ = (UniqueConstraint("project_ref", "external_ref", name="uq_order_project_external_ref"),)
+
     id: int | None = Field(default=None, primary_key=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))

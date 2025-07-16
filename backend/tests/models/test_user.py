@@ -1,6 +1,6 @@
 import pytest
 
-from backend.models.tables import User, Order, Provider, UserType
+from backend.models.tables import Order, Provider, User, UserType
 
 
 @pytest.fixture

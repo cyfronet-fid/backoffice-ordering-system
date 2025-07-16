@@ -9,8 +9,8 @@ def run_command(command: str) -> int:
 
 def lint() -> None:
     commands = [
-        "black --check backend/ migrations/",
-        "isort --check-only backend/ migrations/",
+        "black --check backend/ tests/ migrations/",
+        "isort --check-only backend/ tests/ migrations/",
         "bandit -r backend/",
         "mypy backend/",
         "pylint backend/",
@@ -23,7 +23,7 @@ def lint() -> None:
 
 
 def format_() -> None:
-    commands = ["black backend/ migrations/", "isort backend/ migrations/"]
+    commands = ["black backend/ tests/ migrations/", "isort backend/ tests/ migrations/"]
 
     for command in commands:
         print(f"Running: {command}")

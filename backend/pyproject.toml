@@ -18,13 +18,14 @@ uvicorn = "^0.34.0"
 sqlmodel = "^0.0.22"
 pydantic-settings = "^2.6.0"
 alembic = "^1.13.3"
-psycopg = "^3.1.18"  # Replaces psycopg2 for async support
+psycopg2-binary = "^2.9.9"
 python-dotenv = "^1.0.1"
 pyjwt = {extras = ["crypto"], version = "^2.10.1"}
 urllib3 = "^2.4.0"
 python-dateutil = "^2.9.0.post0"
 typing-extensions = "^4.13.2"
 tenacity = "^9.1.2"
+httpx = "^0.28.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.3"
