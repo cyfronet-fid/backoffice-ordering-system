@@ -1,12 +1,11 @@
 from functools import lru_cache
 
-from dotenv import load_dotenv
-from pydantic_settings import BaseSettings
-
-load_dotenv()  # This is to make the poetry run commands work with .env or if someone doesn't use PyCharm
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env")
+
     db_host: str = "localhost"
     db_port: int = 5432
     db_user: str = "pg"

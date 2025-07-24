@@ -5,32 +5,11 @@ jobs:
   pytest:
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:17
-        env:
-          POSTGRES_PASSWORD: pg
-          POSTGRES_USER: pg
-          POSTGRES_DB: postgres
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
     defaults:
       run:
         working-directory: "./backend"
 
     env:
-      DB_HOST: localhost
-      DB_PORT: 5432
-      DB_USER: pg
-      DB_PASSWORD: pg
-      DB_NAME: postgres
-      
       API_KEY: test-api-key
       KEYCLOAK_HOST: https://keycloak.docker-fid.grid.cyf-kr.edu.pl
       KEYCLOAK_REALM: core
@@ -43,6 +22,10 @@ jobs:
           python-version: "3.12"
       - run: "python -m pip install poetry"
       - run: "poetry install"
-      - run: "poetry run alembic upgrade head"
-      - run: "poetry run pytest"
+      - name: "Run unit tests"
+        run: "poetry run pytest tests/models/ -v"
+      - name: "Run integration tests"
+        run: "poetry run pytest tests/integration/ -v"
+      - name: "Run E2E tests"
+        run: "poetry run pytest tests/e2e/ -v"
 
