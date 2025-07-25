@@ -13,8 +13,8 @@ export type MessageCreate = {
 export type MessageCreateApi = {
   content: string;
   scope?: MessageScope;
-  order_id: number;
-  user_id: number;
+  user_email: string;
+  order_external_ref: string;
 };
 
 export type MessagePublic = {
@@ -28,7 +28,7 @@ export type MessagePublic = {
 
 export type MessageScope = "private" | "public";
 
-export type OrderCreate = {
+export type OrderCreateApi = {
   external_ref: string;
   project_ref: string;
   status?: OrderStatus;
@@ -39,6 +39,7 @@ export type OrderCreate = {
   resource_ref: string;
   resource_type: string;
   resource_name: string;
+  provider_pids: Array<string>;
 };
 
 export type OrderPublic = {
@@ -57,7 +58,7 @@ export type OrderPublic = {
   updated_at: string;
 };
 
-export type OrderPublicWithProviders = {
+export type OrderPublicWithDetails = {
   external_ref: string;
   project_ref: string;
   status?: OrderStatus;
@@ -72,6 +73,7 @@ export type OrderPublicWithProviders = {
   created_at: string;
   updated_at: string;
   providers?: Array<ProviderPublic>;
+  users?: Array<UserPublic>;
 };
 
 export type OrderStatus =
@@ -82,15 +84,17 @@ export type OrderStatus =
   | "rejected"
   | "cancelled";
 
-export type ProviderCreate = {
+export type ProviderCreateApi = {
   name: string;
   website: string;
-  manager_ids: Array<number>;
+  pid: string;
+  manager_emails: Array<string>;
 };
 
 export type ProviderPublic = {
   name: string;
   website: string;
+  pid: string;
   id: number;
   created_at: string;
 };
@@ -98,6 +102,7 @@ export type ProviderPublic = {
 export type ProviderPublicWithDetails = {
   name: string;
   website: string;
+  pid: string;
   id: number;
   created_at: string;
   managers?: Array<UserPublic>;
@@ -148,7 +153,7 @@ export type ReadOrdersResponses = {
   /**
    * Successful Response
    */
-  200: Array<OrderPublicWithProviders>;
+  200: Array<OrderPublicWithDetails>;
 };
 
 export type ReadOrdersResponse = ReadOrdersResponses[keyof ReadOrdersResponses];
@@ -175,7 +180,7 @@ export type GetOrderByIdResponses = {
   /**
    * Successful Response
    */
-  200: OrderPublicWithProviders;
+  200: OrderPublicWithDetails;
 };
 
 export type GetOrderByIdResponse =
@@ -256,31 +261,6 @@ export type ReadUsersResponses = {
 };
 
 export type ReadUsersResponse = ReadUsersResponses[keyof ReadUsersResponses];
-
-export type CreateUserData = {
-  body: UserCreate;
-  path?: never;
-  query?: never;
-  url: "/users/";
-};
-
-export type CreateUserErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type CreateUserError = CreateUserErrors[keyof CreateUserErrors];
-
-export type CreateUserResponses = {
-  /**
-   * Successful Response
-   */
-  200: UserPublic;
-};
-
-export type CreateUserResponse = CreateUserResponses[keyof CreateUserResponses];
 
 export type GetCurrentUserData = {
   body?: never;
@@ -373,23 +353,6 @@ export type GetProviderByIdResponses = {
 export type GetProviderByIdResponse =
   GetProviderByIdResponses[keyof GetProviderByIdResponses];
 
-export type ReadMessagesData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: "/messages/";
-};
-
-export type ReadMessagesResponses = {
-  /**
-   * Successful Response
-   */
-  200: Array<MessagePublic>;
-};
-
-export type ReadMessagesResponse =
-  ReadMessagesResponses[keyof ReadMessagesResponses];
-
 export type CreateMessageData = {
   body: MessageCreate;
   path?: never;
@@ -417,7 +380,7 @@ export type CreateMessageResponse =
   CreateMessageResponses[keyof CreateMessageResponses];
 
 export type ApiCreateProviderData = {
-  body: ProviderCreate;
+  body: ProviderCreateApi;
   path?: never;
   query?: never;
   url: "/api/providers";
@@ -442,6 +405,32 @@ export type ApiCreateProviderResponses = {
 
 export type ApiCreateProviderResponse =
   ApiCreateProviderResponses[keyof ApiCreateProviderResponses];
+
+export type ApiCreateUserData = {
+  body: UserCreate;
+  path?: never;
+  query?: never;
+  url: "/api/users";
+};
+
+export type ApiCreateUserErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ApiCreateUserError = ApiCreateUserErrors[keyof ApiCreateUserErrors];
+
+export type ApiCreateUserResponses = {
+  /**
+   * Successful Response
+   */
+  200: UserPublic;
+};
+
+export type ApiCreateUserResponse =
+  ApiCreateUserResponses[keyof ApiCreateUserResponses];
 
 export type ApiCreateMessageData = {
   body: MessageCreateApi;
@@ -471,7 +460,7 @@ export type ApiCreateMessageResponse =
   ApiCreateMessageResponses[keyof ApiCreateMessageResponses];
 
 export type ApiCreateOrderData = {
-  body: OrderCreate;
+  body: OrderCreateApi;
   path?: never;
   query?: never;
   url: "/api/orders";
@@ -497,14 +486,14 @@ export type ApiCreateOrderResponses = {
 export type ApiCreateOrderResponse =
   ApiCreateOrderResponses[keyof ApiCreateOrderResponses];
 
-export type ReadRootGetData = {
+export type HealthCheckGetData = {
   body?: never;
   path?: never;
   query?: never;
   url: "/";
 };
 
-export type ReadRootGetResponses = {
+export type HealthCheckGetResponses = {
   /**
    * Successful Response
    */
@@ -513,8 +502,8 @@ export type ReadRootGetResponses = {
   };
 };
 
-export type ReadRootGetResponse =
-  ReadRootGetResponses[keyof ReadRootGetResponses];
+export type HealthCheckGetResponse =
+  HealthCheckGetResponses[keyof HealthCheckGetResponses];
 
 export type ClientOptions = {
   baseUrl: "http://localhost:8000" | (string & {});

@@ -52,10 +52,12 @@ class OrderPublic(OrderBase):
 
 class OrderCreateAPI(OrderBase):
     provider_pids: list[str] = Field(min_length=1)
+    owner_email: str = Field(regex=r"^\S+@\S+\.\S+$")
 
 
-class OrderPublicWithProviders(OrderPublic):
+class OrderPublicWithDetails(OrderPublic):
     providers: list["ProviderPublic"] = []
+    users: list["UserPublic"] = []
 
 
 class Order(OrderBase, table=True):

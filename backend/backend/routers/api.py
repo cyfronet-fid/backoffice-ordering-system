@@ -124,10 +124,16 @@ def create_order(  # type: ignore
         missing_pids = set(order_payload.provider_pids) - found_pids
         raise HTTPException(status_code=400, detail=f"Providers {list(missing_pids)} do not exist.")
 
+    owner = session.scalars(select(User).where(User.email == order_payload.owner_email)).first()
+    if not owner or UserType.MP_USER not in owner.user_type:
+        raise HTTPException(
+            status_code=400, detail=f"User {order_payload.owner_email} does not exist or is not an MP_USER."
+        )
+
     # Associate all managers for every provider with this order
     unique_managers = list({manager for provider in providers for manager in provider.managers})
 
-    db_order = Order(**order_payload.model_dump(), providers=providers, users=unique_managers)
+    db_order = Order(**order_payload.model_dump(), providers=providers, users=unique_managers + [owner])
 
     try:
         session.add(db_order)

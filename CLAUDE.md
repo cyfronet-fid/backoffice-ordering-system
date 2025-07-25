@@ -24,104 +24,73 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Format code**: `npm run format`
 - **Generate API client**: `npm run generate-client` (requires backend running on localhost:8000)
 
-### Docker Dependencies
-- **Start dependencies only**: `docker compose up --scale bos-backend=0`
+### Docker
+- **Start dependencies only**: `docker compose up --scale bos-backend=0` (recommended for local dev)
 - **Start all services**: `docker compose up`
 
 ## Architecture Overview
 
-### Backend Architecture
-- **Framework**: FastAPI with SQLModel ORM and PostgreSQL database
-- **Authentication**: Keycloak OAuth2/OIDC integration with dual auth (JWT + API key)
-- **Database**: PostgreSQL with Alembic migrations
-- **API Structure**: Modular routers in `/backend/routers/`
-- **Models**: SQLModel-based tables with relationships in `/backend/models/tables.py`
-- **Services**: Business logic in `/backend/services/`
-- **Configuration**: Environment-based settings via Pydantic in `/backend/config.py`
+### Backend (FastAPI + SQLModel + PostgreSQL)
+- **Entry point**: `backend/backend/main.py` - FastAPI app with security headers middleware
+- **Auth**: `backend/backend/auth.py` - JWT validation (RS256/JWKS), API key verification, user management
+- **Config**: `backend/backend/config.py` - Pydantic settings from environment
+- **Database**: `backend/backend/db.py` - Session management; models in `backend/backend/models/tables.py`
+- **Routers**: `backend/backend/routers/` - API endpoints (users, orders, providers, messages, api)
+- **Services**: `backend/backend/services/` - Business logic including whitelabel API integration
+- **Whitelabel client**: `backend/backend/whitelabel_client/` - Auto-generated external API client
 
-### Backend Security Features
-- **JWT Authentication**: RS256 tokens with JWKS validation and 5-second leeway
-- **API Key Authentication**: Constant-time comparison for external API endpoints
-- **RBAC**: Role-based access control with UserType enum (MP_USER, PROVIDER_MANAGER, COORDINATOR, ADMIN)
-- **Security Headers**: CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy
-- **CORS**: Configured for specific frontend origin with credentials support
-- **Input Validation**: SQLModel field validation with type checking and constraints
-- **SQL Injection Protection**: Parameterized queries via SQLModel ORM
-
-### Frontend Architecture
-- **Framework**: React 18 with TypeScript
+### Frontend (React 18 + TypeScript)
 - **Routing**: TanStack Router with file-based routing
-- **UI**: Chakra UI component library
-- **Authentication**: OIDC integration with react-oidc-context
+- **UI**: Chakra UI component library with SCSS theming
+- **Auth**: OIDC via react-oidc-context (Keycloak)
 - **API Client**: Auto-generated from OpenAPI spec using hey-api/openapi-ts
-- **State Management**: React hooks and context
-- **Styling**: SCSS with Chakra UI theming
 
-### Key Domain Models
-- **User**: Role-based access (MP_USER, PROVIDER_MANAGER, COORDINATOR, ADMIN)
+### Authentication
+- **Dual auth**: JWT tokens (frontend users) + API key (external services)
+- **RBAC roles**: MP_USER, PROVIDER_MANAGER, COORDINATOR, ADMIN (defined in `UserType` enum)
+- **Provider**: Keycloak OAuth2/OIDC
+
+### Domain Models
+- **User**: Role-based access with provider relationships
 - **Order**: Core entity with status tracking and external references
 - **Provider**: Service providers with manager relationships
-- **Message**: Communication system with public/private scopes
-- **Relationships**: Many-to-many links between Users-Orders, Users-Providers, Orders-Providers
+- **Message**: Communication with public/private scopes
+- **Link tables**: Users-Orders, Users-Providers, Orders-Providers (many-to-many)
 
-### External Integration
-- **Whitelabel API**: Client integration in `/backend/whitelabel_client/`
-- **Authentication**: Keycloak realm configuration
-- **Database**: PostgreSQL with connection pooling
+## Environment Variables
 
-### Development Environment
-- **Python**: 3.12+ managed with Poetry
-- **Node**: 21+ for frontend
-- **Database**: PostgreSQL via Docker Compose
-- **Authentication**: Keycloak container setup
+### Backend
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `DB_HOST` | `localhost` | PostgreSQL host |
+| `DB_PORT` | `5432` | PostgreSQL port |
+| `DB_USER` | `pg` | PostgreSQL user |
+| `DB_PASSWORD` | `pg` | PostgreSQL password |
+| `DB_NAME` | `postgres` | Database name |
+| `API_KEY` | **required** | API key for external access |
+| `KEYCLOAK_HOST` | `https://keycloak.docker-fid.grid.cyf-kr.edu.pl` | Keycloak URL |
+| `KEYCLOAK_REALM` | `core` | Keycloak realm |
+| `KEYCLOAK_CLIENT_ID` | `bos` | Keycloak client |
+| `FRONTEND_URL` | `http://localhost:5173` | Frontend URL (CORS) |
+| `WHITELABEL_ENDPOINT` | `http://localhost:5000` | Whitelabel API URL |
+| `WHITELABEL_CLIENT_KEY` | `""` | Whitelabel API key |
 
-### Key Configuration
-- **Backend ENV**: Database connection, Keycloak settings, Whitelabel API config
-- **Frontend ENV**: `VITE_BACKEND_URL` for API endpoint
-- **Database**: Default connection to localhost:5432 with pg/pg credentials
+### Frontend
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `VITE_BACKEND_URL` | `http://localhost:8000` | Backend API URL |
+| `VITE_KEYCLOAK_HOST` | `https://keycloak.docker-fid.grid.cyf-kr.edu.pl` | Keycloak URL |
+| `VITE_KEYCLOAK_REALM` | `core` | Keycloak realm |
+| `VITE_KEYCLOAK_CLIENT_ID` | `bos` | Keycloak client |
 
-### Backend File Structure
-- **`backend/main.py`**: FastAPI app with security headers middleware and router registration
-- **`backend/auth.py`**: Authentication logic (JWT validation, API key verification, user management)
-- **`backend/config.py`**: Environment configuration with Pydantic settings
-- **`backend/db.py`**: Database connection and session management
-- **`backend/routers/`**: API endpoints organized by domain (users, orders, providers, messages, api)
-- **`backend/models/tables.py`**: SQLModel database models with relationships and validation
-- **`backend/services/call_whitelabel.py`**: External API integration with retry logic
-- **`backend/whitelabel_client/`**: Auto-generated client for whitelabel API integration
-
-### Testing
-- **Backend**: pytest framework with model tests
-- **Frontend**: ESLint and Prettier for code quality
-- **CI/CD**: GitHub Actions for automated testing and linting
-
-### Commit Message Convention
-This project follows **Conventional Commits** specification (https://www.conventionalcommits.org/):
+## Commit Message Convention
 
 **Format**: `<type>: [<scope>] <description>`
 
-**Types**:
-- `feat`: New feature
-- `fix`: Bug fix
-- `refactor`: Code refactoring
-- `docs`: Documentation updates
-- `test`: Adding/updating tests
-- `chore`: Maintenance tasks
+**Types**: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`
 
-**Scopes**:
-- `[#<issue_number>]`: For GitHub issue references (e.g., `[#23]`)
-- `[AdHoc]`: For ad-hoc changes not tied to specific issues
-- `[adhoc]`: Alternative lowercase format for ad-hoc changes
+**Scopes**: `[#<issue_number>]` for GitHub issues, `[AdHoc]` for ad-hoc changes
 
 **Examples**:
 - `feat: [#23] Add role based permissions`
-- `fix: [#162] Adjust whitelabel API endpoints`
 - `fix: [AdHoc] Adjust whitelabel API and few UI tweaks`
-- `refactor: [adhoc] Adjust project structure and readme`
-
-### Important Notes
-- Always run linting/formatting before commits
-- Backend must be running for frontend API client generation
-- Use `poetry shell` for backend development
-- Database migrations are auto-generated but should be reviewed
-- Authentication tokens are handled via Keycloak integration

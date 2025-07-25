@@ -8,7 +8,7 @@ import backend.services.call_whitelabel as wl
 from backend.auth import current_user
 from backend.const import ORDER_STATUS_STATE_MACHINE
 from backend.db import get_session_dep
-from backend.models.tables import MessagePublic, Order, OrderPublic, OrderPublicWithProviders, OrderStatus, User
+from backend.models.tables import MessagePublic, Order, OrderPublic, OrderPublicWithDetails, OrderStatus, User
 
 router = APIRouter(
     prefix="/orders",
@@ -34,21 +34,22 @@ def _get_order_with_access_check(
     return order
 
 
-@router.get("/", response_model=list[OrderPublicWithProviders], operation_id="readOrders")
+@router.get("/", response_model=list[OrderPublicWithDetails], operation_id="readOrders")
 def read_orders(  # type: ignore
     session: Annotated[Session, Depends(get_session_dep)],
     user: Annotated[User, Depends(current_user)],
 ):
     if user.is_admin() or user.is_coordinator():
-        return session.exec(select(Order)).all()
+        orders = session.exec(select(Order).order_by(Order.created_at.desc())).all()  # type: ignore # pylint: disable=no-member
+        return orders
 
     if user.is_provider_manager():
-        return user.orders
+        return sorted(user.orders, key=lambda order: order.created_at, reverse=True)
 
     return []
 
 
-@router.get("/{order_id}", response_model=OrderPublicWithProviders, operation_id="getOrderById")
+@router.get("/{order_id}", response_model=OrderPublicWithDetails, operation_id="getOrderById")
 def get_order_by_id(order: Annotated[Order, Depends(_get_order_with_access_check)]):  # type: ignore
     return order
 

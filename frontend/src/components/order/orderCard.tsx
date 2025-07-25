@@ -1,6 +1,6 @@
-import { OrderPublicWithProviders } from "@/client";
+import { OrderPublicWithDetails } from "@/client";
 import { StatusTag } from "@/components/common/statusTag.tsx";
-import { snakeToTitle } from "@/utils.ts";
+import { getMpUser, snakeToTitle } from "@/utils.ts";
 import {
   Box,
   Code,
@@ -15,10 +15,12 @@ import {
 import { Link as RouterLink } from "@tanstack/react-router";
 
 interface Props {
-  order: OrderPublicWithProviders;
+  order: OrderPublicWithDetails;
 }
 
 export function OrderCard({ order }: Props) {
+  const mpUser = getMpUser(order.users);
+
   return (
     <Box p={6} boxShadow="md" borderRadius="md" bg="white">
       <Flex justify="space-between" align="center" mb={4}>
@@ -48,6 +50,23 @@ export function OrderCard({ order }: Props) {
                 ))
               ) : (
                 <Tag colorScheme="gray">No Providers</Tag>
+              )}
+            </Td>
+          </Tr>
+          <Tr>
+            <Td fontWeight="bold">User</Td>
+            <Td>
+              {mpUser ? (
+                <Tag
+                  as={RouterLink}
+                  colorScheme="gray"
+                  to={`/users/${mpUser.id}`}
+                  key={mpUser.id}
+                >
+                  {mpUser.name}
+                </Tag>
+              ) : (
+                "-"
               )}
             </Td>
           </Tr>

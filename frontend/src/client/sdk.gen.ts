@@ -20,9 +20,6 @@ import type {
   ChangeOrderStatusError,
   ReadUsersData,
   ReadUsersResponse,
-  CreateUserData,
-  CreateUserResponse,
-  CreateUserError,
   GetCurrentUserData,
   GetCurrentUserResponse,
   GetUserByIdData,
@@ -33,22 +30,23 @@ import type {
   GetProviderByIdData,
   GetProviderByIdResponse,
   GetProviderByIdError,
-  ReadMessagesData,
-  ReadMessagesResponse,
   CreateMessageData,
   CreateMessageResponse,
   CreateMessageError,
   ApiCreateProviderData,
   ApiCreateProviderResponse,
   ApiCreateProviderError,
+  ApiCreateUserData,
+  ApiCreateUserResponse,
+  ApiCreateUserError,
   ApiCreateMessageData,
   ApiCreateMessageResponse,
   ApiCreateMessageError,
   ApiCreateOrderData,
   ApiCreateOrderResponse,
   ApiCreateOrderError,
-  ReadRootGetData,
-  ReadRootGetResponse,
+  HealthCheckGetData,
+  HealthCheckGetResponse,
 } from "./types.gen";
 
 export type Options<
@@ -174,32 +172,6 @@ export const readUsers = <ThrowOnError extends boolean = false>(
 };
 
 /**
- * Create User
- */
-export const createUser = <ThrowOnError extends boolean = false>(
-  options: Options<CreateUserData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).post<
-    CreateUserResponse,
-    CreateUserError,
-    ThrowOnError
-  >({
-    security: [
-      {
-        scheme: "bearer",
-        type: "http",
-      },
-    ],
-    url: "/users/",
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options?.headers,
-    },
-  });
-};
-
-/**
  * Get Current User
  */
 export const getCurrentUser = <ThrowOnError extends boolean = false>(
@@ -266,7 +238,7 @@ export const readProviders = <ThrowOnError extends boolean = false>(
 };
 
 /**
- * Get User By Id
+ * Get Provider By Id
  */
 export const getProviderById = <ThrowOnError extends boolean = false>(
   options: Options<GetProviderByIdData, ThrowOnError>,
@@ -283,28 +255,6 @@ export const getProviderById = <ThrowOnError extends boolean = false>(
       },
     ],
     url: "/providers/{provider_id}",
-    ...options,
-  });
-};
-
-/**
- * Read Messages
- */
-export const readMessages = <ThrowOnError extends boolean = false>(
-  options?: Options<ReadMessagesData, ThrowOnError>,
-) => {
-  return (options?.client ?? _heyApiClient).get<
-    ReadMessagesResponse,
-    unknown,
-    ThrowOnError
-  >({
-    security: [
-      {
-        scheme: "bearer",
-        type: "http",
-      },
-    ],
-    url: "/messages/",
     ...options,
   });
 };
@@ -353,6 +303,32 @@ export const apiCreateProvider = <ThrowOnError extends boolean = false>(
       },
     ],
     url: "/api/providers",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options?.headers,
+    },
+  });
+};
+
+/**
+ * Create User
+ */
+export const apiCreateUser = <ThrowOnError extends boolean = false>(
+  options: Options<ApiCreateUserData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    ApiCreateUserResponse,
+    ApiCreateUserError,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: "x-key",
+        type: "apiKey",
+      },
+    ],
+    url: "/api/users",
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -414,13 +390,13 @@ export const apiCreateOrder = <ThrowOnError extends boolean = false>(
 };
 
 /**
- * Read Root
+ * Health Check
  */
-export const readRootGet = <ThrowOnError extends boolean = false>(
-  options?: Options<ReadRootGetData, ThrowOnError>,
+export const healthCheckGet = <ThrowOnError extends boolean = false>(
+  options?: Options<HealthCheckGetData, ThrowOnError>,
 ) => {
   return (options?.client ?? _heyApiClient).get<
-    ReadRootGetResponse,
+    HealthCheckGetResponse,
     unknown,
     ThrowOnError
   >({
