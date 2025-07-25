@@ -1,7 +1,9 @@
 import re
+import ssl
 from secrets import compare_digest
 from typing import Annotated, Any
 
+import certifi
 import jwt
 from fastapi import Depends, HTTPException
 from fastapi.security import APIKeyHeader, OpenIdConnect
@@ -14,7 +16,10 @@ from backend.models.tables import User, UserType
 oidc_scheme = OpenIdConnect(openIdConnectUrl=get_settings().keycloak_connection_string)
 header_scheme = APIKeyHeader(name="x-key")
 
-jwks_client = jwt.PyJWKClient(get_settings().keycloak_jwks_uri)
+jwks_client = jwt.PyJWKClient(
+    uri=get_settings().keycloak_jwks_uri,
+    ssl_context=(ssl.create_default_context(cafile=certifi.where())),
+)
 
 BEARER_PATTERN = re.compile(r"^Bearer ([A-Za-z0-9\-_.]+)$")
 

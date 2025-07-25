@@ -1,4 +1,4 @@
-import { OrderPublicWithProviders, readOrders } from "@/client";
+import { OrderPublicWithDetails, readOrders } from "@/client";
 import { OrdersTable } from "@/components/order/ordersTable.tsx";
 import { getAuthorizationHeader, useDebouncedValue } from "@/utils.ts";
 import { Flex, Heading, Input } from "@chakra-ui/react";
@@ -22,7 +22,7 @@ export function Orders() {
   const debouncedQuery = useDebouncedValue(query, 200);
 
   const orderFilterPredicate = (
-    order: OrderPublicWithProviders,
+    order: OrderPublicWithDetails,
     queryBy: string,
   ) => {
     // TODO: We'd probably like more sophisticated search later, but it's good enough for now

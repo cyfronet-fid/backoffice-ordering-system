@@ -1,4 +1,4 @@
-import { OrderPublic, OrderPublicWithProviders } from "@/client";
+import { OrderPublic, OrderPublicWithDetails, UserPublic } from "@/client";
 import { useEffect, useState } from "react";
 import { AuthContextProps } from "react-oidc-context";
 
@@ -18,13 +18,16 @@ export const convertTimestamp = (timestamp: string) => {
     day: "2-digit",
     month: "long",
     year: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
     timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   }).format(date);
 };
 
 export function isExtendedOrder(
   order: OrderPublic,
-): order is OrderPublicWithProviders {
+): order is OrderPublicWithDetails {
   return "providers" in order;
 }
 
@@ -45,4 +48,10 @@ export function snakeToTitle(str: string): string {
     .filter(Boolean)
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(" ");
+}
+
+export function getMpUser(
+  all_users: UserPublic[] | undefined,
+): UserPublic | undefined {
+  return all_users?.find((user) => user.user_type.includes("mp_user"));
 }
