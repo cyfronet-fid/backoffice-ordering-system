@@ -115,9 +115,10 @@ I recommend using [mise](https://mise.jdx.dev) for node versioning (check `/.mis
 ### Tech stack
 - [Typescript](https://www.typescriptlang.org/) - typing, transpiler
 - [React 18](https://react.dev/) - frontend framework
-- [React Router](https://reactrouter.com/en/main) - client-side routing
+- [Tanstack React Router](https://tanstack.com/router/latest) - client-side routing
 - [Vite](https://vite.dev/guide/) - react initialization/management
 - [hey-api/openapi-ts](https://github.com/hey-api/openapi-ts) - automatic client generation
+- [Chakra UI](https://chakra-ui.com/) - styling framework
 
 ### Install deps
 
