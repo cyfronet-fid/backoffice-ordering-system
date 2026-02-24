@@ -3,7 +3,11 @@ import { Logo } from "@/components/layout/logo.tsx";
 import { Button, Flex, Link, Text } from "@chakra-ui/react";
 import { useAuth } from "react-oidc-context";
 
-export const Header = () => {
+type HeaderProps = {
+  headerBackgroundColor?: string;
+};
+
+export const Header = ({ headerBackgroundColor = "gray.200" }: HeaderProps) => {
   const auth = useAuth();
 
   return (
@@ -12,7 +16,7 @@ export const Header = () => {
       justify="space-between"
       px="6"
       height="100%"
-      bg={auth.isAuthenticated ? "gray.200" : "white"}
+      bg={headerBackgroundColor}
     >
       <Logo />
       {auth.isAuthenticated ? (
