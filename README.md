@@ -60,6 +60,38 @@ poetry run alembic revision --autogenerate -m "{MIGRATION NAME}"
 poetry run pytest tests/
 ```
 
+Coverage is reported automatically after every run.
+
+#### Test structure
+
+```
+tests/
+  unit/           # No DB required — fast, runs anywhere
+    models/       # Model logic unit tests
+    security/     # API key auth, OIDC/JWT auth, security headers
+  integration/    # Requires PostgreSQL (Docker)
+    factories.py  # factory-boy factories — extend here to add test data
+    routers/      # API endpoint tests (one file per router)
+```
+
+#### Unit tests
+
+No dependencies needed — just run:
+```shell
+poetry run pytest tests/unit/
+```
+
+#### Integration tests
+
+Require Docker to be running (see [Run docker dependencies](#run-docker-dependencies)).
+
+The test database (`postgres_test`) is created and dropped automatically — no manual setup needed.
+Alembic migrations run once per session; tables are truncated between tests.
+
+```shell
+poetry run pytest tests/integration/
+```
+
 ### Run linters/formatters
 
 Check (lint-only) mode

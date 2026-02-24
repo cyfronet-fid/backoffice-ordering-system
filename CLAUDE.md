@@ -6,7 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Backend (Poetry - run in `/backend` directory)
 - **Start dev server**: `poetry run uvicorn backend.main:app --reload --host localhost`
-- **Run tests**: `poetry run pytest tests/`
+- **Run all tests**: `poetry run pytest tests/`
+- **Run unit tests only** (no Docker): `poetry run pytest tests/unit/`
+- **Run integration tests only** (requires Docker): `poetry run pytest tests/integration/`
 - **Lint check**: `poetry run lint`
 - **Format code**: `poetry run format`
 - **Run single test**: `poetry run pytest tests/path/to/test.py::test_function_name`
@@ -38,6 +40,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Routers**: `backend/backend/routers/` - API endpoints (users, orders, providers, messages, api)
 - **Services**: `backend/backend/services/` - Business logic including whitelabel API integration
 - **Whitelabel client**: `backend/backend/whitelabel_client/` - Auto-generated external API client
+
+### Testing (`backend/tests/`)
+- **`unit/`** — no DB, no Docker; plain `TestClient`; models, auth, security headers
+- **`integration/`** — real PostgreSQL via `pytest-postgresql`; alembic runs once per session; tables truncated between tests
+- **`integration/factories.py`** — factory-boy factories for all models; auto-discovered and registered as pytest fixtures via `inspect`
+- **`integration/routers/conftest.py`** — role-based client fixtures: `admin_client`, `coordinator_client`, `provider_manager_client`, `mp_user_client`, `api_client`
+- Coverage runs automatically on every `pytest` call (`pytest-cov`); report omits `migrations/` and `whitelabel_client/`
 
 ### Frontend (React 18 + TypeScript)
 - **Routing**: TanStack Router with file-based routing

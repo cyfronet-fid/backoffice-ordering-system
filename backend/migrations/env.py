@@ -34,14 +34,19 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = get_settings().db_connection_string
     context.configure(
-        url=url,
+        url=get_settings().db_connection_string,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
     )
 
+    with context.begin_transaction():
+        context.run_migrations()
+
+
+def _run_migrations(connection) -> None:
+    context.configure(connection=connection, target_metadata=target_metadata)
     with context.begin_transaction():
         context.run_migrations()
 
@@ -52,15 +57,15 @@ def run_migrations_online() -> None:
     In this scenario we need to create an Engine
     and associate a connection with the context.
 
+    A pre-existing connection can be passed via config.attributes["connection"]
+    (e.g. from tests) to avoid creating a second engine.
     """
-    url = get_settings().db_connection_string
-    connectable = create_engine(url)
+    if connection := config.attributes.get("connection"):
+        _run_migrations(connection)
+        return
 
-    with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
-
-        with context.begin_transaction():
-            context.run_migrations()
+    with create_engine(get_settings().db_connection_string).connect() as connection:
+        _run_migrations(connection)
 
 
 if context.is_offline_mode():

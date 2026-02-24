@@ -23,7 +23,7 @@ class Settings(BaseSettings):
 
     @property
     def db_connection_string(self) -> str:
-        return f"postgresql://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
+        return f"postgresql+psycopg://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
 
     @property
     def keycloak_realm_base_url(self) -> str:
