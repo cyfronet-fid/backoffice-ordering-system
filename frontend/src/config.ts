@@ -28,4 +28,5 @@ export const oidcConfig: AuthProviderProps = {
   monitorSession: true,
   userStore: new WebStorageStateStore({ store: window.sessionStorage }),
   post_logout_redirect_uri: window.location.origin,
+  automaticSilentRenew: true, // works even without this flag, added for clarity
 };
