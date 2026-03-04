@@ -62,3 +62,18 @@ def test_valid_token(client, example_jwt, protected_oidc_path):
         response = client.get(protected_oidc_path, headers={"authorization": f"Bearer {example_jwt}"})
 
         assert response.status_code not in [401, 403]
+
+
+def test_expired_token(client, example_jwt, protected_oidc_path):
+    with (
+        patch("backend.auth.jwks_client") as mock_jwks_client,
+        patch("backend.auth.jwt.decode") as mock_jwt_decode,
+    ):
+        mock_signing_key = MagicMock()
+        mock_jwks_client.get_signing_key_from_jwt.return_value = mock_signing_key
+        mock_jwt_decode.side_effect = jwt.ExpiredSignatureError("Token has expired")
+
+        response = client.get(protected_oidc_path, headers={"authorization": f"Bearer {example_jwt}"})
+
+        assert response.status_code == 401
+        assert response.json() == {"detail": "Token has expired"}

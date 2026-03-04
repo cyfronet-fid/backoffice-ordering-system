@@ -98,7 +98,12 @@ def create_message(  # type: ignore
     if not order:
         raise HTTPException(status_code=404, detail=f"Order {message_payload.order_external_ref} does not exist.")
 
-    db_message = Message(**message_payload.model_dump(), author=user, order=order)
+    db_message = Message(
+        content=message_payload.content,
+        scope=message_payload.scope,
+        author_id=user.id,
+        order_id=order.id,
+    )
 
     # Associate the user with the given order if not already associated
     if user not in order.users:
