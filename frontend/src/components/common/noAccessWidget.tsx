@@ -64,6 +64,7 @@ export function NoAccessWidget() {
                   w="210px"
                   onClick={() =>
                     (window.location.href =
+                      import.meta.env.VITE_MARKETPLACE_URL ||
                       "https://marketplace.docker-fid.grid.cyf-kr.edu.pl/")
                   }
                 >
@@ -76,6 +77,7 @@ export function NoAccessWidget() {
                   w="210px"
                   onClick={() =>
                     (window.location.href =
+                      import.meta.env.VITE_BECOME_PROVIDER_URL ||
                       "https://marketplace.docker-fid.grid.cyf-kr.edu.pl/backoffice/providers/new/wizard")
                   }
                 >
