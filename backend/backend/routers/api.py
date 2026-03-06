@@ -117,7 +117,6 @@ def create_message(  # type: ignore
     session.add_all([db_message, order])
     session.commit()
     session.refresh(db_message)
-
     return db_message
 
 
