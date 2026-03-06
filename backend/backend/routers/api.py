@@ -2,7 +2,7 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
@@ -23,6 +23,7 @@ from backend.models.tables import (
     UserPublic,
     UserType,
 )
+from backend.services import email_notifications
 
 router = APIRouter(prefix="/api", tags=["api"], dependencies=[Depends(verify_api_key)])
 
@@ -85,6 +86,7 @@ def create_user(user_payload: UserCreate, session: Annotated[Session, Depends(ge
 def create_message(  # type: ignore
     message_payload: MessageCreateAPI,
     session: Annotated[Session, Depends(get_session_dep)],
+    background_tasks: BackgroundTasks,
 ):
     user = session.scalars(select(User).where(User.email == message_payload.user_email)).first()
 
@@ -112,6 +114,12 @@ def create_message(  # type: ignore
     session.add_all([db_message, order])
     session.commit()
     session.refresh(db_message)
+
+    message_id: int = db_message.id
+    background_tasks.add_task(
+        email_notifications.send_order_message_notification,
+        message_id=message_id,
+    )
 
     return db_message
 
