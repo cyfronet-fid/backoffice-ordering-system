@@ -71,6 +71,7 @@ class Order(OrderBase, table=True):
     messages: list["Message"] = Relationship(back_populates="order", cascade_delete=True)
     users: list["User"] = Relationship(back_populates="orders", link_model=UserOrderLink)
     providers: list["Provider"] = Relationship(back_populates="orders", link_model=OrderProviderLink)
+    logs: list["OrderLog"] = Relationship(back_populates="order", cascade_delete=True)
 
 
 ### User
@@ -118,6 +119,7 @@ class User(UserBase, table=True):
     messages: list["Message"] = Relationship(back_populates="author", cascade_delete=True)
     orders: list[Order] = Relationship(back_populates="users", link_model=UserOrderLink)
     employers: list["Provider"] = Relationship(back_populates="managers", link_model=UserProviderLink)
+    order_logs: list["OrderLog"] = Relationship(back_populates="author", cascade_delete=True)
 
     def _has_access_override(self) -> bool:
         return self.is_admin() or self.is_coordinator()
@@ -137,6 +139,18 @@ class User(UserBase, table=True):
 
     def __eq__(self, other: object) -> bool:
         return isinstance(other, User) and self.email == other.email
+
+
+class OrderLog(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
+
+    order_id: int | None = Field(default=None, foreign_key="order.id", nullable=False, ondelete="CASCADE")
+    order: Order | None = Relationship(back_populates="logs")
+    status_from: OrderStatus = Field(nullable=False)
+    status_to: OrderStatus = Field(nullable=False)
+    author_id: int = Field(foreign_key="user.id", nullable=False, ondelete="CASCADE")
+    author: User | None = Relationship(back_populates="order_logs")
 
 
 ### Message
@@ -206,3 +220,23 @@ class Provider(ProviderBase, table=True):
 
     managers: list[User] = Relationship(back_populates="employers", link_model=UserProviderLink)
     orders: list[Order] = Relationship(back_populates="providers", link_model=OrderProviderLink)
+
+
+class NotifiableType(str, enum.Enum):
+    ORDER_LOG = "order_log"
+    MESSAGE = "message"
+
+
+class NotificationBase(SQLModel):
+    content: str = Field(nullable=False)
+    email_delivered: bool = Field(default=False, nullable=False)
+
+
+class Notification(NotificationBase, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
+
+    recipient_id: int | None = Field(default=None, foreign_key="user.id", nullable=False, ondelete="CASCADE")
+    notifiable_id: int | None = Field(default=None, nullable=False)
+    notifiable_type: NotifiableType = Field(sa_column=Column(ENUM(NotifiableType), nullable=False))
+

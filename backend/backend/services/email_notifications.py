@@ -6,18 +6,15 @@ from sqlmodel import select
 
 from backend.config import get_settings
 from backend.db import get_session
-from backend.models.tables import Message, Order, User, UserType, OrderStatus
+from backend.models.tables import Message, Order, User, UserType, OrderStatus, Notification, NotifiableType, OrderLog
 
 logger = logging.getLogger(__name__)
 
 
-def _send_email(subject: str, body: str, recipients: list[str]) -> None:
+def _send_email(subject: str, body: str, recipients: list[str]) -> bool:
     if not recipients:
         logger.info("No recipients provided for email with subject '%s'; skipping send.", subject)
-        logger.info("\n\nsend email")
-        print(type(recipients))
-        print(recipients)
-        return
+        return False
 
     settings = get_settings()
 
@@ -27,7 +24,7 @@ def _send_email(subject: str, body: str, recipients: list[str]) -> None:
             subject,
             recipients,
         )
-        return
+        return False
 
     sender = settings.smtp_from or (settings.smtp_user or "no-reply@example.com")
 
@@ -36,8 +33,8 @@ def _send_email(subject: str, body: str, recipients: list[str]) -> None:
     logger.error(f"Original sender: {sender}")
     logger.error(f"Original recipients: {recipients}")
 
-    sender = "grw4zyyy@gmail.com"
-    recipients = ["g3rw4zyyyyy@gmail.com"]
+    # sender = "gr"
+    # recipients = ["g3"]
 
     message = EmailMessage()
     message["Subject"] = subject
@@ -55,8 +52,10 @@ def _send_email(subject: str, body: str, recipients: list[str]) -> None:
 
             smtp.send_message(message)
             logger.info("Sent email '%s' to %s", subject, recipients)
+            return True
     except Exception:
         logger.exception("Failed to send email '%s' to %s", subject, recipients)
+        return False
 
 
 def send_order_message_notification(message_id: int) -> None:
@@ -70,7 +69,8 @@ def send_order_message_notification(message_id: int) -> None:
         order: Order = db_message.order
 
         author_email = db_message.author.email if db_message.author else None
-        recipients = [author_email]
+        recipient_ids = [db_message.author_id] if db_message.author_id else []
+        recipient_emails = [author_email] if author_email else []
 
         settings = get_settings()
         platform_name = settings.platform_name
@@ -90,7 +90,27 @@ def send_order_message_notification(message_id: int) -> None:
             "Operations Team\n"
             f"{platform_name}"
         )
-        _send_email(subject=subject, body=body, recipients=list(recipients))
+        notifications: list[Notification] = []
+        for user_id in recipient_ids:
+            notifications.append(
+                Notification(
+                    recipient_id=user_id,
+                    content=body,
+                    notifiable_id=message_id,
+                    notifiable_type=NotifiableType.MESSAGE,
+                )
+            )
+        session.add_all(notifications)
+        session.commit()
+        for notification in notifications:
+            session.refresh(notification)
+        logging.error(f"\t\t\t\tRecipients: {recipient_emails}")
+        sent = _send_email(subject=subject, body=body, recipients=recipient_emails)
+        if sent:
+            for notification in notifications:
+                notification.email_delivered = True
+            session.add_all(notifications)
+            session.commit()
 
 
 
@@ -143,6 +163,9 @@ def send_order_status_change_notification(order_id: int) -> None:
         )
         order_link = f"https://bos.eosc.pl/orders/{order_id}"
 
+        subject = ""
+        body = ""
+
         if status == OrderStatus.ON_HOLD:
             if not user_recipients:
                 logger.info("No MP_USER recipients for order %s ON_HOLD notification; skipping.", order_id)
@@ -159,8 +182,8 @@ def send_order_status_change_notification(order_id: int) -> None:
                 "Operations Team\n"
                 f"{platform_name}"
             )
-            _send_email(subject=subject, body=body, recipients=list(user_recipients))
-            return
+            # _send_email(subject=subject, body=body, recipients=list(user_recipients))
+            # return
 
         if status == OrderStatus.COMPLETED:
             if not user_recipients:
@@ -177,8 +200,8 @@ def send_order_status_change_notification(order_id: int) -> None:
                 "Operations Team\n"
                 f"{platform_name}"
             )
-            _send_email(subject=subject, body=body, recipients=list(user_recipients))
-            return
+            # _send_email(subject=subject, body=body, recipients=list(user_recipients))
+            # return
 
         if status == OrderStatus.REJECTED:
             if not user_recipients:
@@ -194,41 +217,45 @@ def send_order_status_change_notification(order_id: int) -> None:
                 "Operations Team\n"
                 f"{platform_name}"
             )
-            _send_email(subject=subject, body=body, recipients=list(user_recipients))
-            return
+            # _send_email(subject=subject, body=body, recipients=list(user_recipients))
+            # return
 
-        if status == OrderStatus.CANCELLED:
-            subject = f"Order cancelled: {offer_name} from {owner_name} (ID: {order.id})"
+        # if status == OrderStatus.CANCELLED:
+        #     subject = f"Order cancelled: {offer_name} from {owner_name} (ID: {order.id})"
+        #
+        #     provider_body = (
+        #         "Dear Provider,\n\n"
+        #         f"We regret to inform you that your order {offer_name} has been cancelled.\n\n"
+        #         f"Order ID: {order.id}\n\n"
+        #         "Best regards,\n"
+        #         "Operations Team\n"
+        #         f"{platform_name}"
+        #     )
+        #
+        #     coordinator_body = (
+        #         "Dear Coordinator,\n\n"
+        #         f"We regret to inform you that your order {offer_name} has been cancelled.\n\n"
+        #         f"Order ID: {order.id}\n\n"
+        #         "Best regards,\n"
+        #         "Operations Team\n"
+        #         f"{platform_name}"
+        #     )
 
-            provider_body = (
-                "Dear Provider,\n\n"
-                f"We regret to inform you that your order {offer_name} has been cancelled.\n\n"
-                f"Order ID: {order.id}\n\n"
-                "Best regards,\n"
-                "Operations Team\n"
-                f"{platform_name}"
-            )
-
-            coordinator_body = (
-                "Dear Coordinator,\n\n"
-                f"We regret to inform you that your order {offer_name} has been cancelled.\n\n"
-                f"Order ID: {order.id}\n\n"
-                "Best regards,\n"
-                "Operations Team\n"
-                f"{platform_name}"
-            )
-
-            if provider_recipients:
-                _send_email(subject=subject, body=provider_body, recipients=list(provider_recipients))
-
-            if coordinator_recipients:
-                _send_email(subject=subject, body=coordinator_body, recipients=list(coordinator_recipients))
-
-            if not provider_recipients and not coordinator_recipients:
-                logger.info(
-                    "No provider/coordinator recipients for order %s CANCELLED notification; skipping.",
-                    order_id,
-                )
-            return
+            # if provider_recipients:
+            #     _send_email(subject=subject, body=provider_body, recipients=list(provider_recipients))
+            #
+            # if coordinator_recipients:
+            #     _send_email(subject=subject, body=coordinator_body, recipients=list(coordinator_recipients))
+            #
+            # if not provider_recipients and not coordinator_recipients:
+            #     logger.info(
+            #         "No provider/coordinator recipients for order %s CANCELLED notification; skipping.",
+            #         order_id,
+            #     )
+            # return
+        recipient_emails = [order.author.email]
+        logging.error(f"\t\t\t\tRecipients: {recipient_emails}")
+        if subject and body:
+            sent = _send_email(subject=subject, body=body, recipients=recipient_emails)
 
         logger.info("No email template configured for order %s status %s; skipping notification.", order_id, status)
