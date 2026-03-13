@@ -9,6 +9,7 @@ from backend.auth import current_user
 from backend.const import ORDER_STATUS_STATE_MACHINE
 from backend.db import get_session_dep
 from backend.models.tables import MessagePublic, Order, OrderPublic, OrderPublicWithDetails, OrderStatus, User
+from backend.services import email_notifications
 
 router = APIRouter(
     prefix="/orders",
@@ -77,5 +78,9 @@ def change_order_status(  # type: ignore
 
     order_id: int = order.id  # type: ignore
     background_tasks.add_task(wl.change_order_status, order_id=order_id)
+    background_tasks.add_task(
+        email_notifications.send_order_status_change_notification,
+        order_id=order_id,
+    )
 
     return order
