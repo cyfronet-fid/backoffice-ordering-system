@@ -239,4 +239,3 @@ class Notification(NotificationBase, table=True):
     recipient_id: int | None = Field(default=None, foreign_key="user.id", nullable=False, ondelete="CASCADE")
     notifiable_id: int | None = Field(default=None, nullable=False)
     notifiable_type: NotifiableType = Field(sa_column=Column(ENUM(NotifiableType), nullable=False))
-
