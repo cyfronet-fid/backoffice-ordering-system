@@ -69,14 +69,13 @@ def change_order_status(  # type: ignore
     new_status: OrderStatus,
     session: Annotated[Session, Depends(get_session_dep)],
     background_tasks: BackgroundTasks,
-    status_change_author: Annotated[User, Depends(get_current_user)]
+    status_change_author: Annotated[User, Depends(get_current_user)],
 ):
     if new_status not in ORDER_STATUS_STATE_MACHINE[order.status]:
         raise HTTPException(status_code=400, detail=f"Invalid status transition: {order.status} -> {new_status.name}")
 
     status_from = order.status
-    # order.status = new_status
-    print(f"Changing order status to {new_status}")
+    order.status = new_status
 
     session.add(order)
     session.commit()
@@ -94,18 +93,13 @@ def change_order_status(  # type: ignore
     print(f"provider_manager: {[user.email for user in grouped_users["provider_manager"]]}")
     print(f"mp_user: {[user.email for user in grouped_users["mp_user"]]}")
 
-
-    print()
-
-    # background_tasks.add_task(
-    #     email_notifications.send_order_status_change_notification,
-    #     order_id=order_id,
-    #     status_from=status_from,
-    #     status_to=new_status,
-    #     users=grouped_users,
-    #     status_change_author=status_change_author,
-    # )
-
-    email_notifications.send_order_status_change_notification(order_id=order_id, status_from=status_from, status_to=new_status, users=grouped_users, status_change_author=status_change_author)
+    background_tasks.add_task(
+        email_notifications.send_order_status_change_notification,
+        order_id=order_id,
+        status_from=status_from,
+        status_to=new_status,
+        users=grouped_users,
+        status_change_author=status_change_author,
+    )
 
     return order

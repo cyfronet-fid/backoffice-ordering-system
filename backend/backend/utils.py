@@ -22,12 +22,6 @@ def _resolve_message_recipients(order: Order, scope: MessageScope) -> list[User]
     return [u for u in order.users if any(role in allowed_roles for role in u.user_type)]
 
 
-def _resolve_order_users(order: Order) -> list[User]:
-    allowed_roles: set[UserType] = {UserType.MP_USER}
-
-    return [u for u in order.users if all(role in allowed_roles for role in u.user_type)]
-
-
 def group_users_by_role(order: Order) -> dict[str, list[User]]:
     grouped = {
         "admin": [],

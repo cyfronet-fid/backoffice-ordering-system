@@ -26,8 +26,6 @@ class Settings(BaseSettings):
     smtp_user: str | None = None
     smtp_password: str | None = None
     smtp_starttls: bool = True
-    smtp_from: str | None = None
-
     platform_name: str | None = None
 
     @property
