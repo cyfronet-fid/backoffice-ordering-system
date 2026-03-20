@@ -4,7 +4,7 @@ from email.message import EmailMessage
 
 from backend.config import get_settings
 from backend.db import get_session
-from backend.models.tables import Message, Order, User, OrderStatus, Notification, NotifiableType, OrderLog
+from backend.models.tables import Message, NotifiableType, Notification, Order, OrderLog, OrderStatus, User
 
 logger = logging.getLogger(__name__)
 

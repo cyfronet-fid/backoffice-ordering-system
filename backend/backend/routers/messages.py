@@ -3,13 +3,12 @@ from typing import Annotated
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlmodel import Session
 
+import backend.services.call_whitelabel as wl
 from backend.auth import current_user
 from backend.db import get_session_dep
-from backend.models.tables import Message, MessageCreate, MessagePublic, Order, User, MessageScope
+from backend.models.tables import Message, MessageCreate, MessagePublic, MessageScope, Order, User
 from backend.services.email_notifications import send_order_message_notification
 from backend.utils import _resolve_message_recipients, get_whitelabel_role
-import backend.services.call_whitelabel as wl
-
 
 router = APIRouter(
     prefix="/messages",

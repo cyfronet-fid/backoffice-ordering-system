@@ -1,6 +1,6 @@
 from typing import Literal
 
-from backend.models.tables import User, UserType, Order, MessageScope
+from backend.models.tables import MessageScope, Order, User, UserType
 
 
 def get_whitelabel_role(user: User) -> Literal[UserType.PROVIDER_MANAGER, UserType.COORDINATOR]:

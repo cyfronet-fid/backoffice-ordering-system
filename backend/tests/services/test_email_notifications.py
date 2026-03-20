@@ -10,8 +10,8 @@ import pytest
 from backend.models.tables import (
     Message,
     MessageScope,
-    Notification,
     NotifiableType,
+    Notification,
     Order,
     OrderLog,
     OrderStatus,
