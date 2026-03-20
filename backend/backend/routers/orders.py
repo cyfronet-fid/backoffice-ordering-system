@@ -82,16 +82,9 @@ def change_order_status(  # type: ignore
     session.refresh(order)
 
     order_id: int = order.id  # type: ignore
-    # background_tasks.add_task(wl.change_order_status, order_id=order_id)
-    logging.error(f"\t\t\t\ttest logging")
-
-    # users = _resolve_order_users(order)
+    background_tasks.add_task(wl.change_order_status, order_id=order_id)
 
     grouped_users = group_users_by_role(order)
-    print(f"admin: {[user.email for user in grouped_users["admin"]]}")
-    print(f"coordinator: {[user.email for user in grouped_users["coordinator"]]}")
-    print(f"provider_manager: {[user.email for user in grouped_users["provider_manager"]]}")
-    print(f"mp_user: {[user.email for user in grouped_users["mp_user"]]}")
 
     background_tasks.add_task(
         email_notifications.send_order_status_change_notification,

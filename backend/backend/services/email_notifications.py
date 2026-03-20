@@ -37,7 +37,6 @@ def _send_email(subject: str, body: str, recipients: list[str]) -> bool:
                 smtp.starttls()
 
             smtp.login(settings.smtp_user, settings.smtp_password)
-            # logger.error(f"SMTP login: {settings.smtp_user}\t\t jest git")
 
             smtp.send_message(message)
             logger.info("Sent email '%s' to %s", subject, recipients)

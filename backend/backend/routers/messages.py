@@ -5,9 +5,11 @@ from sqlmodel import Session
 
 from backend.auth import current_user
 from backend.db import get_session_dep
-from backend.models.tables import Message, MessageCreate, MessagePublic, Order, User
+from backend.models.tables import Message, MessageCreate, MessagePublic, Order, User, MessageScope
 from backend.services.email_notifications import send_order_message_notification
-from backend.utils import _resolve_message_recipients
+from backend.utils import _resolve_message_recipients, get_whitelabel_role
+import backend.services.call_whitelabel as wl
+
 
 router = APIRouter(
     prefix="/messages",
@@ -43,15 +45,19 @@ def create_message(  # type: ignore
     session.refresh(db_message)
 
     recipients = _resolve_message_recipients(order, message.scope)
-    print("\t\t\tRecipients:")
-    for recipient in recipients:
-        print(f"\t\t\t{recipient.email}")
-    # print(recipients)
 
     background_tasks.add_task(
         send_order_message_notification,
         message_id=db_message.id,
         recipients=recipients,
     )
+
+    if message.scope == MessageScope.PUBLIC:
+        message_id: int = db_message.id  # type: ignore
+        background_tasks.add_task(
+            wl.post_message,
+            message_id=message_id,
+            send_as=get_whitelabel_role(user),
+        )
 
     return db_message
