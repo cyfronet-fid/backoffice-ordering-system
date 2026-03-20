@@ -1,3 +1,4 @@
+import logging
 from typing import Annotated
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
@@ -9,6 +10,9 @@ from backend.auth import current_user
 from backend.const import ORDER_STATUS_STATE_MACHINE
 from backend.db import get_session_dep
 from backend.models.tables import MessagePublic, Order, OrderPublic, OrderPublicWithDetails, OrderStatus, User
+from backend.routers.users import get_current_user
+from backend.services import email_notifications
+from backend.utils import group_users_by_role
 
 router = APIRouter(
     prefix="/orders",
@@ -65,10 +69,12 @@ def change_order_status(  # type: ignore
     new_status: OrderStatus,
     session: Annotated[Session, Depends(get_session_dep)],
     background_tasks: BackgroundTasks,
+    status_change_author: Annotated[User, Depends(get_current_user)],
 ):
     if new_status not in ORDER_STATUS_STATE_MACHINE[order.status]:
         raise HTTPException(status_code=400, detail=f"Invalid status transition: {order.status} -> {new_status.name}")
 
+    status_from = order.status
     order.status = new_status
 
     session.add(order)
@@ -77,5 +83,16 @@ def change_order_status(  # type: ignore
 
     order_id: int = order.id  # type: ignore
     background_tasks.add_task(wl.change_order_status, order_id=order_id)
+
+    grouped_users = group_users_by_role(order)
+
+    background_tasks.add_task(
+        email_notifications.send_order_status_change_notification,
+        order_id=order_id,
+        status_from=status_from,
+        status_to=new_status,
+        users=grouped_users,
+        status_change_author=status_change_author,
+    )
 
     return order

@@ -21,6 +21,13 @@ class Settings(BaseSettings):
     whitelabel_max_retry_delay_s: int = 60
     whitelabel_default_oms_id: int = 1
 
+    smtp_host: str | None = None
+    smtp_port: int = 587
+    smtp_user: str | None = None
+    smtp_password: str | None = None
+    smtp_starttls: bool = True
+    platform_name: str | None = None
+
     @property
     def db_connection_string(self) -> str:
         return f"postgresql+psycopg://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
