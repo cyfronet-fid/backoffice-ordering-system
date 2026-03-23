@@ -10,11 +10,15 @@ import {
   HStack,
 } from "@chakra-ui/react";
 
-export function NoAccessWidget() {
+interface NoAccessWidgetProps {
+  userName?: string;
+}
+
+export function NoAccessWidget({ userName }: NoAccessWidgetProps) {
   return (
     <Flex direction="column" h="100vh" w="100vw">
       <Box h="80px">
-        <Header headerBackgroundColor="white" />
+        <Header headerBackgroundColor="white" userName={userName} />
       </Box>
 
       <Flex

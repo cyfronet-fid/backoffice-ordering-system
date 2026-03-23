@@ -1,5 +1,6 @@
 import { createMessage, MessagePublic } from "@/client";
 import { RoleTag } from "@/components/common/roleTag.tsx";
+import { useAppUser } from "@/hooks/useAppUser.ts";
 import { getAuthorizationHeader } from "@/utils.ts";
 import {
   Box,
@@ -21,6 +22,7 @@ interface Props {
 
 export function ConversationThread({ messages, orderId }: Props) {
   const auth = useAuth();
+  const appUser = useAppUser();
   const router = useRouter();
   const toast = useToast();
 
@@ -100,7 +102,7 @@ export function ConversationThread({ messages, orderId }: Props) {
               >
                 <Box fontSize="sm" fontWeight="bold" mb={1}>
                   <Link as={RouterLink} to={`/users/${message.author.id}`}>
-                    {message.author.email === auth.user?.profile.email ? (
+                    {message.author.email === appUser.email ? (
                       "You"
                     ) : (
                       <>

@@ -27,6 +27,7 @@ typing-extensions = "^4.13.2"
 tenacity = "^9.1.2"
 httpx = "^0.28.1"
 certifi = "^2026.1.4"
+cachetools = "^7.0.5"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.3"
@@ -40,6 +41,7 @@ pytest-env = "^1.1.0"
 factory-boy = "^3.3.3"
 pytest-factoryboy = "^2.8.1"
 pytest-cov = "^7.0.0"
+types-cachetools = "^6.2.0.20260317"
 
 [tool.poetry.scripts]
 "db:seed" = "scripts.db:seed"

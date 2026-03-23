@@ -1,11 +1,15 @@
+from unittest.mock import patch
+
 from backend.auth import current_user
 from backend.models.tables import User, UserType
 
 
 def test_current_user_creates_new_user(db_session):
-    user_payload = {"name": "New User", "email": "new.user@example.com"}
-
-    user = current_user(token=user_payload, session=db_session)
+    with patch(
+        "backend.auth._fetch_userinfo",
+        return_value={"name": "New User", "email": "new.user@example.com"},
+    ):
+        user = current_user(raw_auth="", token={"sub": "test-sub"}, session=db_session)
 
     assert isinstance(user, User)
     assert user.id is not None
@@ -27,9 +31,11 @@ def test_current_user_returns_existing_user(db_session):
     db_session.add(existing)
     db_session.commit()
 
-    token = {"name": "Ignored Name", "email": "existing.user@example.com"}
-
-    user = current_user(token=token, session=db_session)
+    with patch(
+        "backend.auth._fetch_userinfo",
+        return_value={"name": "Ignored Name", "email": "existing.user@example.com"},
+    ):
+        user = current_user(raw_auth="", token={"sub": "test-sub"}, session=db_session)
 
     assert user.id == existing.id
     assert user.name == "Existing User"

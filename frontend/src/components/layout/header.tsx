@@ -5,9 +5,13 @@ import { useAuth } from "react-oidc-context";
 
 type HeaderProps = {
   headerBackgroundColor?: string;
+  userName?: string;
 };
 
-export const Header = ({ headerBackgroundColor = "gray.200" }: HeaderProps) => {
+export const Header = ({
+  headerBackgroundColor = "gray.200",
+  userName,
+}: HeaderProps) => {
   const auth = useAuth();
 
   return (
@@ -22,7 +26,7 @@ export const Header = ({ headerBackgroundColor = "gray.200" }: HeaderProps) => {
       {auth.isAuthenticated ? (
         <Flex align={"center"} gap={2}>
           <UserIcon />
-          <Text fontWeight="bold">{auth.user?.profile?.name}</Text>
+          <Text fontWeight="bold">{userName}</Text>
           <Button onClick={() => void auth.signoutRedirect()}>Logout</Button>
         </Flex>
       ) : (
