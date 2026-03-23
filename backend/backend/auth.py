@@ -9,6 +9,7 @@ import jwt
 from cachetools import TTLCache, cached
 from fastapi import Depends, HTTPException
 from fastapi.security import APIKeyHeader, OpenIdConnect
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
 from backend.config import get_settings
@@ -101,13 +102,19 @@ def current_user(
     user = session.exec(query).first()
 
     if user is None:
-        user = User(
-            name=name,
-            email=email,
-            user_type=[UserType.MP_USER],
-        )
-        session.add(user)
-        session.commit()
-        session.refresh(user)
+        try:
+            user = User(
+                name=name,
+                email=email,
+                user_type=[UserType.MP_USER],
+            )
+            session.add(user)
+            session.commit()
+            session.refresh(user)
+        except IntegrityError as exc:
+            session.rollback()
+            user = session.exec(select(User).where(User.email == email)).first()
+            if user is None:
+                raise HTTPException(status_code=500, detail="Failed to create user") from exc
 
     return user
