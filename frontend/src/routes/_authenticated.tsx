@@ -2,6 +2,7 @@ import { getCurrentUser } from "@/client";
 import { NoAccessWidget } from "@/components/common/noAccessWidget.tsx";
 import { Header } from "@/components/layout/header.tsx";
 import { Nav } from "@/components/layout/nav.tsx";
+import { useAppUser } from "@/hooks/useAppUser.ts";
 import { getAuthorizationHeader } from "@/utils.ts";
 import { Grid, GridItem } from "@chakra-ui/react";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
@@ -24,14 +25,14 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 function RouteComponent() {
-  const { appUser } = Route.useLoaderData();
+  const appUser = useAppUser();
 
   const roles = appUser?.user_type ?? [];
 
   const isOnlyMpUser = roles.every((role) => role === "mp_user");
 
   if (isOnlyMpUser) {
-    return <NoAccessWidget />;
+    return <NoAccessWidget userName={appUser?.name} />;
   }
 
   return (
@@ -46,7 +47,7 @@ function RouteComponent() {
       bg="gray.200"
     >
       <GridItem area="header" bg="gray.200">
-        <Header />
+        <Header userName={appUser?.name} />
       </GridItem>
 
       <GridItem area="nav" bg="white" borderRadius="md" mr="4">

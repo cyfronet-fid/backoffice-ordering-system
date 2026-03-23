@@ -11,7 +11,7 @@ from backend.main import app
 def client():
     # Override DB session with a mock so unit tests never touch a real database.
     # Integration tests supply a real session via their own conftest.
-    app.dependency_overrides[get_session_dep] = MagicMock
+    app.dependency_overrides[get_session_dep] = lambda: MagicMock()
     try:
         with TestClient(app) as c:
             yield c
