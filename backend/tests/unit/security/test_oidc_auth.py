@@ -74,6 +74,33 @@ def test_valid_token(client, example_jwt, protected_oidc_path):
         app.dependency_overrides.pop(get_session_dep, None)
 
 
+def test_concurrent_first_login_race_condition(client, example_jwt, protected_oidc_path):
+    from sqlalchemy.exc import IntegrityError
+
+    fake_user = User(name="John Doe", email="john.doe@example.com", user_type=[UserType.MP_USER])
+    fake_user.id = 42
+
+    mock_session = MagicMock()
+    mock_session.exec.return_value.first.side_effect = [None, fake_user]
+    mock_session.commit.side_effect = IntegrityError("duplicate", {}, Exception())
+    app.dependency_overrides[get_session_dep] = lambda: mock_session
+
+    with (
+        patch("backend.auth.jwks_client") as mock_jwks_client,
+        patch("backend.auth.jwt.decode") as mock_jwt_decode,
+    ):
+        mock_jwks_client.get_signing_key_from_jwt.return_value = MagicMock()
+        mock_jwt_decode.return_value = {
+            "sub": "1234567890",
+            "name": "John Doe",
+            "email": "john.doe@example.com",
+        }
+
+        response = client.get(protected_oidc_path, headers={"authorization": f"Bearer {example_jwt}"})
+        assert response.status_code not in [401, 403, 500]
+        mock_session.rollback.assert_called_once()
+
+
 def test_expired_token(client, example_jwt, protected_oidc_path):
     with (
         patch("backend.auth.jwks_client") as mock_jwks_client,
