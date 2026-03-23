@@ -1,10 +1,10 @@
 import { getUserById } from "@/client";
 import { NotFound } from "@/components/common/notFound.tsx";
 import { UserCard } from "@/components/user/userCard.tsx";
+import { useAppUser } from "@/hooks/useAppUser.ts";
 import { getAuthorizationHeader } from "@/utils.ts";
 import { Badge, Box, Button, Flex, Heading } from "@chakra-ui/react";
 import { createFileRoute, Link as RouterLink } from "@tanstack/react-router";
-import { useAuth } from "react-oidc-context";
 
 export const Route = createFileRoute("/_authenticated/users/$userId")({
   component: RouteComponent,
@@ -19,7 +19,7 @@ export const Route = createFileRoute("/_authenticated/users/$userId")({
 
 function RouteComponent() {
   const user = Route.useLoaderData()!;
-  const auth = useAuth();
+  const appUser = useAppUser();
 
   if (!user) {
     return <NotFound />;
@@ -30,7 +30,7 @@ function RouteComponent() {
       <Flex justify="space-between" align="center" mb={4}>
         <Heading>
           {`User > ${user.id}`}
-          {auth.user?.profile.email === user.email ? (
+          {appUser.id === user.id ? (
             <Badge colorScheme={"purple"}>You</Badge>
           ) : undefined}
         </Heading>

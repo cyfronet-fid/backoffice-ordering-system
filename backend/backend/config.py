@@ -37,6 +37,10 @@ class Settings(BaseSettings):
     def keycloak_jwks_uri(self) -> str:
         return f"{self.keycloak_realm_base_url}/protocol/openid-connect/certs"
 
+    @property
+    def keycloak_userinfo_uri(self) -> str:
+        return f"{self.keycloak_realm_base_url}/protocol/openid-connect/userinfo"
+
 
 @lru_cache
 def get_settings() -> Settings:
