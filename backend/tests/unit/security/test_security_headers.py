@@ -8,6 +8,17 @@ def test_security_csp_header(client):
     assert "style-src 'self' 'unsafe-inline'" in csp
     assert "img-src 'self' data:" in csp
     assert "connect-src 'self'" in csp
+    assert "cdn.jsdelivr.net" not in csp
+    assert "fastapi.tiangolo.com" not in csp
+
+
+def test_docs_csp_allows_cdn(client):
+    response = client.get("/docs")
+
+    csp = response.headers["Content-Security-Policy"]
+    assert "https://cdn.jsdelivr.net" in csp
+    assert "https://fastapi.tiangolo.com" in csp
+    assert "keycloak" in csp
 
 
 def test_security_clickjacking(client):
