@@ -4,7 +4,9 @@ from secrets import compare_digest
 from typing import Annotated, Any
 
 import certifi
+import httpx
 import jwt
+from cachetools import TTLCache, cached
 from fastapi import Depends, HTTPException
 from fastapi.security import APIKeyHeader, OpenIdConnect
 from sqlmodel import Session, select
@@ -21,7 +23,25 @@ jwks_client = jwt.PyJWKClient(
     ssl_context=(ssl.create_default_context(cafile=certifi.where())),
 )
 
+http_client = httpx.Client(verify=ssl.create_default_context(cafile=certifi.where()))
+
 BEARER_PATTERN = re.compile(r"^Bearer ([A-Za-z0-9\-_.]+)$")
+
+
+@cached(TTLCache(maxsize=256, ttl=300), key=lambda raw_auth, _sub: _sub)
+def _fetch_userinfo(raw_auth: str, _sub: str) -> dict[str, Any]:
+    try:
+        response = http_client.get(
+            get_settings().keycloak_userinfo_uri,
+            headers={"Authorization": raw_auth},
+            timeout=5.0,
+        )
+        response.raise_for_status()
+        return response.json()
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=401, detail="Token rejected by UserInfo endpoint") from e
+    except httpx.RequestError:
+        return {}
 
 
 def verify_token(raw_token: Annotated[str, Depends(oidc_scheme)]) -> dict[str, Any]:
@@ -61,10 +81,21 @@ def verify_api_key(api_key: str = Depends(header_scheme)) -> None:
 
 
 def current_user(
-    token: Annotated[dict[str, Any], Depends(verify_token)], session: Annotated[Session, Depends(get_session_dep)]
+    raw_auth: Annotated[str, Depends(oidc_scheme)],
+    token: Annotated[dict[str, Any], Depends(verify_token)],
+    session: Annotated[Session, Depends(get_session_dep)],
 ) -> User:
-    name = token["name"]
-    email = token["email"]
+    name = token.get("name")
+    email = token.get("email")
+
+    try:
+        if not name or not email:
+            userinfo = _fetch_userinfo(raw_auth, token["sub"])
+            name = userinfo["name"]
+            email = userinfo["email"]
+
+    except KeyError as exc:
+        raise HTTPException(status_code=401, detail="Unable to determine user identity") from exc
 
     query = select(User).where(User.email == email)
     user = session.exec(query).first()

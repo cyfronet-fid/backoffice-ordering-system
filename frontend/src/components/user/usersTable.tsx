@@ -1,6 +1,7 @@
 import { UserPublic } from "@/client";
 import { DefaultTableRender } from "@/components/common/defaultTableRender.tsx";
 import { RoleTag } from "@/components/common/roleTag.tsx";
+import { useAppUser } from "@/hooks/useAppUser.ts";
 import { convertTimestamp } from "@/utils.ts";
 import { Badge, Flex } from "@chakra-ui/react";
 import { useRouter } from "@tanstack/react-router";
@@ -9,7 +10,6 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { useAuth } from "react-oidc-context";
 
 interface Props {
   users: UserPublic[];
@@ -17,14 +17,14 @@ interface Props {
 
 export function UsersTable({ users }: Props) {
   const router = useRouter();
-  const auth = useAuth();
+  const appUser = useAppUser();
 
   const columnHelper = createColumnHelper<UserPublic>();
   const columns = [
     columnHelper.accessor("name", {
       header: () => <span>Name</span>,
       cell: (info) =>
-        auth.user?.profile.email === info.row.original.email ? (
+        appUser.email === info.row.original.email ? (
           <Flex gap={"2"}>
             {info.getValue()} <Badge colorScheme={"purple"}>You</Badge>
           </Flex>
