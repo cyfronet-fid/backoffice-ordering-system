@@ -165,6 +165,7 @@ class MessageCreate(MessageBase):
 class MessageCreateAPI(MessageBase):
     user_email: str
     order_external_ref: str
+    project_external_ref: str
 
 
 class Message(MessageBase, table=True):

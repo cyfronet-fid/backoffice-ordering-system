@@ -94,7 +94,12 @@ def create_message(  # type: ignore
     if UserType.MP_USER not in user.user_type:
         raise HTTPException(status_code=400, detail=f"User {message_payload.user_email} is not an MP_USER.")
 
-    order = session.scalars(select(Order).where(Order.external_ref == message_payload.order_external_ref)).first()
+    order = session.scalars(
+        select(Order).where(
+            Order.external_ref == message_payload.order_external_ref,
+            Order.project_ref == message_payload.project_external_ref,
+        )
+    ).first()
     if not order:
         raise HTTPException(status_code=404, detail=f"Order {message_payload.order_external_ref} does not exist.")
 
@@ -146,6 +151,8 @@ def create_order(  # type: ignore
         session.refresh(db_order)
     except IntegrityError as e:
         session.rollback()
-        raise HTTPException(status_code=409, detail=f"Order {order_payload.external_ref} already exists") from e
+        raise HTTPException(
+            status_code=409, detail=f"Order {order_payload.project_ref}/{order_payload.external_ref} already exists"
+        ) from e
 
     return db_order

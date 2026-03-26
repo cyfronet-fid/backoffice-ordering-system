@@ -87,7 +87,7 @@ def test_create_user_conflict_on_duplicate_email(api_client, user_factory):
 
 def test_create_message_happy_path(api_client, db_session, user_factory, order_factory):
     mp_user = user_factory(user_type=[UserType.MP_USER])
-    order = order_factory(external_ref="ext-123")
+    order = order_factory(external_ref="ext-123", project_ref="proj-123")
     db_session.commit()
 
     payload = {
@@ -95,6 +95,7 @@ def test_create_message_happy_path(api_client, db_session, user_factory, order_f
         "scope": MessageScope.PUBLIC.value,
         "user_email": mp_user.email,
         "order_external_ref": order.external_ref,
+        "project_external_ref": order.project_ref,
     }
 
     response = api_client.post("/api/messages", json=payload)
@@ -118,6 +119,7 @@ def test_create_message_fails_when_user_missing(api_client, order_factory):
         "scope": MessageScope.PRIVATE.value,
         "user_email": "no.such.user@test.com",
         "order_external_ref": order.external_ref,
+        "project_external_ref": order.project_ref,
     }
 
     response = api_client.post("/api/messages", json=payload)
@@ -135,11 +137,54 @@ def test_create_message_fails_when_user_not_mp_user(api_client, db_session, admi
         "scope": MessageScope.PRIVATE.value,
         "user_email": admin.email,
         "order_external_ref": order.external_ref,
+        "project_external_ref": order.project_ref,
     }
 
     response = api_client.post("/api/messages", json=payload)
     assert response.status_code == HTTPStatus.BAD_REQUEST
     assert "is not an MP_USER" in response.json()["detail"]
+
+
+def test_create_message_matches_order_by_external_ref_and_project_ref(
+    api_client, db_session, user_factory, order_factory
+):
+    mp_user = user_factory(user_type=[UserType.MP_USER])
+    order_factory(external_ref="ext-same", project_ref="proj-A")
+    order_b = order_factory(external_ref="ext-same", project_ref="proj-B")
+    db_session.commit()
+
+    payload = {
+        "content": "Message for project B",
+        "scope": MessageScope.PUBLIC.value,
+        "user_email": mp_user.email,
+        "order_external_ref": "ext-same",
+        "project_external_ref": "proj-B",
+    }
+
+    response = api_client.post("/api/messages", json=payload)
+    assert response.status_code == HTTPStatus.OK
+
+    data = response.json()
+    assert data["order"]["id"] == order_b.id
+    assert data["order"]["project_ref"] == "proj-B"
+
+
+def test_create_message_fails_when_project_ref_does_not_match(api_client, db_session, user_factory, order_factory):
+    mp_user = user_factory(user_type=[UserType.MP_USER])
+    order_factory(external_ref="ext-exists", project_ref="proj-real")
+    db_session.commit()
+
+    payload = {
+        "content": "Hello",
+        "scope": MessageScope.PUBLIC.value,
+        "user_email": mp_user.email,
+        "order_external_ref": "ext-exists",
+        "project_external_ref": "proj-wrong",
+    }
+
+    response = api_client.post("/api/messages", json=payload)
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert "does not exist" in response.json()["detail"]
 
 
 def test_create_message_fails_when_order_missing(api_client, user_factory):
@@ -150,6 +195,7 @@ def test_create_message_fails_when_order_missing(api_client, user_factory):
         "scope": MessageScope.PRIVATE.value,
         "user_email": mp_user.email,
         "order_external_ref": "no-such-order",
+        "project_external_ref": "no-such-project",
     }
 
     response = api_client.post("/api/messages", json=payload)
