@@ -20,6 +20,9 @@ interface Props {
 
 export function OrderCard({ order }: Props) {
   const mpUser = getMpUser(order.users);
+  const manager = order.users?.find((user) =>
+    user.user_type?.includes("provider_manager"),
+  );
 
   return (
     <Box p={6} boxShadow="md" borderRadius="md" bg="white">
@@ -85,15 +88,13 @@ export function OrderCard({ order }: Props) {
           <Tr>
             <Td fontWeight="bold">Contact</Td>
             <Td>
-              {order.providers &&
-              order.providers.length > 0 &&
-              order.providers[0].website ? (
+              {manager?.email ? (
                 <Link
-                  href={order.providers[0].website}
+                  href={`mailto:${manager.email}`}
                   color="blue.500"
                   isExternal
                 >
-                  {order.providers[0].website}
+                  {manager.email}
                 </Link>
               ) : (
                 "-"
