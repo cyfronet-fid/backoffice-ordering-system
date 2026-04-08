@@ -7,7 +7,8 @@ import backend.services.call_whitelabel as wl
 from backend.auth import current_user
 from backend.db import get_session_dep
 from backend.models.tables import Message, MessageCreate, MessagePublic, MessageScope, Order, User
-from backend.utils import get_whitelabel_role
+from backend.services.email_notifications import send_order_message_notification
+from backend.utils import _resolve_message_recipients, get_whitelabel_role
 
 router = APIRouter(
     prefix="/messages",
@@ -42,8 +43,19 @@ def create_message(  # type: ignore
     session.commit()
     session.refresh(db_message)
 
+    if db_message.id is None:
+        return None
+
+    recipients = _resolve_message_recipients(order, message.scope, user.email)
+
+    background_tasks.add_task(
+        send_order_message_notification,
+        message_id=db_message.id,
+        recipients=recipients,
+    )
+
     if message.scope == MessageScope.PUBLIC:
-        message_id: int = db_message.id  # type: ignore
+        message_id: int = db_message.id
         background_tasks.add_task(
             wl.post_message,
             message_id=message_id,
