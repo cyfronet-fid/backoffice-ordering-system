@@ -41,12 +41,12 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):  # pylint: disable=too-few-p
             # Read the response body to surface the error detail in the log.
             # We must re-stream it afterward, otherwise the client gets an empty body.
             body_bytes = b""
-            async for chunk in response.body_iterator:  # type: ignore[attr-defined]
+            async for chunk in response.body_iterator:
                 body_bytes += chunk
 
             try:
                 log_data["response_body"] = body_bytes.decode("utf-8", errors="replace")
-            except Exception:  # pragma: no cover
+            except Exception:  # pylint: disable=broad-exception-caught
                 log_data["response_body"] = "<unreadable>"
 
             level = logging.ERROR if status_code >= 500 else logging.WARNING
