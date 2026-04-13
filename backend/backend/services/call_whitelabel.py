@@ -8,6 +8,7 @@ from backend.config import get_settings
 from backend.const import WHITELABEL_ORDER_STATUS_MAPPING
 from backend.db import get_session
 from backend.exceptions import NotFoundException
+from backend.logger import log_background_task_exceptions
 from backend.models.tables import Message, Order, UserType
 from whitelabel_client import ApiException, MessageWrite, MessageWriteAuthor, ProjectItemUpdate
 
@@ -93,9 +94,15 @@ def _wl_sync_wrapper(entity_cls, entity_id, sync_fn):  # type: ignore
             raise
 
 
+@log_background_task_exceptions
 def post_message(message_id: int, send_as: Literal[UserType.PROVIDER_MANAGER, UserType.COORDINATOR]) -> None:
+    logger.info("Background task post_message started for message_id=%s", message_id)
     _wl_sync_wrapper(Message, message_id, lambda m: _post_message(m, send_as))
+    logger.info("Background task post_message finished for message_id=%s", message_id)
 
 
+@log_background_task_exceptions
 def change_order_status(order_id: int) -> None:
+    logger.info("Background task change_order_status started for order_id=%s", order_id)
     _wl_sync_wrapper(Order, order_id, _change_order_status)
+    logger.info("Background task change_order_status finished for order_id=%s", order_id)

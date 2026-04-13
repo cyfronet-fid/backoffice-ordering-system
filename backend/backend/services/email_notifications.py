@@ -4,6 +4,7 @@ from email.message import EmailMessage
 
 from backend.config import get_settings
 from backend.db import get_session
+from backend.logger import log_background_task_exceptions
 from backend.models.tables import Message, NotifiableType, Notification, Order, OrderStatus, User
 from backend.services.email_helper import STATUS_NOTIFICATION_MAP
 from backend.utils import _role_label
@@ -67,7 +68,10 @@ def _send_and_record(
 
 
 # pylint: disable=too-many-locals
+@log_background_task_exceptions
 def send_order_message_notification(message_id: int, recipients: list[User]) -> None:
+    logger.info("Background task send_order_message_notification started for message_id=%s", message_id)
+
     with get_session() as session:
         db_message = session.get(Message, message_id)
         if db_message is None or db_message.order is None:
@@ -112,14 +116,26 @@ def send_order_message_notification(message_id: int, recipients: list[User]) -> 
 
         session.add_all(notifications)
         session.commit()
+        logger.info(
+            "send_order_message_notification finished: %s notification(s) saved for message_id=%s",
+            len(notifications),
+            message_id,
+        )
 
 
+@log_background_task_exceptions
 def send_order_status_change_notification(
     order_id: int,
     status_to: OrderStatus,
     users: dict[str, list[User]],
     order_log_id: int,
 ) -> None:
+    logger.info(
+        "Background task send_order_status_change_notification started for order_id=%s status_to=%s",
+        order_id,
+        status_to,
+    )
+
     with get_session() as session:
         order = session.get(Order, order_id)
         if order is None:
@@ -132,6 +148,11 @@ def send_order_status_change_notification(
 
         entry = STATUS_NOTIFICATION_MAP.get(status_to)
         if entry is None:
+            logger.info(
+                "No notification template for status %s (order_id=%s); skipping.",
+                status_to,
+                order_id,
+            )
             return
 
         email_builder, recipient_groups = entry
@@ -161,5 +182,10 @@ def send_order_status_change_notification(
                     )
                 )
 
-            session.add_all(notifications)
-            session.commit()
+        session.add_all(notifications)
+        session.commit()
+        logger.info(
+            "send_order_status_change_notification finished: %s notification(s) saved for order_id=%s",
+            len(notifications),
+            order_id,
+        )
