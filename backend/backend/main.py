@@ -6,7 +6,7 @@ from starlette.responses import JSONResponse
 
 from backend.config import get_settings
 from backend.logger import setup_logging
-from backend.middleware import SecurityHeadersMiddleware
+from backend.middleware import RequestLoggingMiddleware, SecurityHeadersMiddleware
 from backend.routers import api, messages, orders, providers, root, users
 
 setup_logging()
@@ -26,13 +26,20 @@ app = FastAPI(
 async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     logger.error(
         "Unhandled server error",
-        exc_info=exc,
-        extra={"request_meta": {"method": request.method, "url": str(request.url)}},
+        exc_info=(type(exc), exc, exc.__traceback__),
+        extra={
+            "request_meta": {"method": request.method, "path": request.url.path},
+            "method": request.method,
+            "path": request.url.path,
+            "status_code": 500,
+            "exception_type": type(exc).__name__,
+        },
     )
     return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
 
 
 app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[get_settings().frontend_url],

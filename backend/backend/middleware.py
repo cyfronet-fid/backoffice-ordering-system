@@ -14,11 +14,7 @@ _SWAGGER_PATHS = {"/docs", "/docs/oauth2-redirect", "/redoc", "/openapi.json"}
 
 
 class RequestLoggingMiddleware(BaseHTTPMiddleware):  # pylint: disable=too-few-public-methods
-    """Logs every request/response pair with method, path, status and duration.
-
-    On 4xx/5xx responses the response body is also captured so the error
-    detail is visible in the logs without needing a separate debugging session.
-    """
+    """Log failed requests with enough context to diagnose server-side errors."""
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         start = time.perf_counter()
@@ -34,33 +30,9 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):  # pylint: disable=too-few-p
             "duration_ms": duration_ms,
         }
 
-        if request.url.query:
-            log_data["query"] = request.url.query
-
         if status_code >= 400:
-            # Read the response body to surface the error detail in the log.
-            # We must re-stream it afterward, otherwise the client gets an empty body.
-            body_bytes = b""
-            async for chunk in response.body_iterator:
-                body_bytes += chunk
-
-            try:
-                log_data["response_body"] = body_bytes.decode("utf-8", errors="replace")
-            except Exception:  # pylint: disable=broad-exception-caught
-                log_data["response_body"] = "<unreadable>"
-
             level = logging.ERROR if status_code >= 500 else logging.WARNING
-            logger.log(level, "HTTP %s %s → %s", request.method, request.url.path, status_code, extra=log_data)
-
-            # Re-build the response with the already-consumed body
-            return Response(
-                content=body_bytes,
-                status_code=status_code,
-                headers=dict(response.headers),
-                media_type=response.media_type,
-            )
-
-        logger.info("HTTP %s %s → %s", request.method, request.url.path, status_code, extra=log_data)
+            logger.log(level, "HTTP request failed", extra=log_data)
         return response
 
 

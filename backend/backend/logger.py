@@ -16,14 +16,39 @@ class JsonFormatter(logging.Formatter):
         }
 
         if record.exc_info:
-            # Format the exception like typical python stacktraces
-            log_entry["exception"] = self.formatException(record.exc_info)
+            exc_type, exc_value, _ = record.exc_info
+
+            log_entry["exception_type"] = exc_type.__name__
+            log_entry["exception_message"] = str(exc_value)
+            log_entry["stack_trace"] = self.formatException(record.exc_info)
 
         # Add basic uvicorn/fastapi request context if present
         if hasattr(record, "request_meta"):
             log_entry["request"] = record.request_meta
 
-        return json.dumps(log_entry)
+        fields = (
+            "method",
+            "path",
+            "status_code",
+            "duration_ms",
+            "task",
+            "message_id",
+            "order_id",
+            "operation",
+            "smtp_host",
+            "smtp_port",
+            "recipient_count",
+            "failure_count",
+            "success_count",
+            "exception_type",
+            "missing_settings",
+        )
+        for field in fields:
+            value = getattr(record, field, None)
+            if value is not None:
+                log_entry[field] = value
+
+        return json.dumps(log_entry, default=str, ensure_ascii=False)
 
 
 def setup_logging() -> None:
@@ -55,7 +80,15 @@ def log_background_task_exceptions(func: Callable) -> Callable:
             return func(*args, **kwargs)
         except Exception as e:
             logger = logging.getLogger(__name__)
-            logger.error("Background task %s failed", func.__name__, exc_info=True)
+            context = {
+                key: value
+                for key, value in kwargs.items()
+                if key in {"message_id", "order_id"} and isinstance(value, (str, int))
+            }
+            logger.exception(
+                "Background task failed",
+                extra={"task": func.__name__, "exception_type": type(e).__name__, **context},
+            )
             raise e
 
     return wrapper

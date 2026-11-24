@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 def _send_email(subject: str, body: str, recipients: list[str]) -> bool:
     if not recipients:
-        logger.info("No recipients provided for email with subject '%s'; skipping send.", subject)
+        logger.warning("Email delivery skipped: no recipients", extra={"operation": "send_email"})
         return False
 
     settings = get_settings()
@@ -35,17 +35,25 @@ def _send_email(subject: str, body: str, recipients: list[str]) -> bool:
     message.set_content(body)
 
     try:
-        with smtplib.SMTP(settings.smtp_host, settings.smtp_port) as smtp:
+        with smtplib.SMTP(settings.smtp_host, settings.smtp_port, timeout=15) as smtp:
             if settings.smtp_starttls:
                 smtp.starttls()
 
             smtp.login(settings.smtp_user, settings.smtp_password)  # type: ignore
 
             smtp.send_message(message)
-            logger.info("Sent email '%s' to %s", subject, recipients)
             return True
-    except smtplib.SMTPException:
-        logger.exception("Failed to send email '%s' to %s", subject, recipients)
+    except (smtplib.SMTPException, OSError, ValueError) as exc:
+        logger.exception(
+            "Email delivery failed",
+            extra={
+                "operation": "send_email",
+                "smtp_host": settings.smtp_host,
+                "smtp_port": settings.smtp_port,
+                "recipient_count": len(recipients),
+                "exception_type": type(exc).__name__,
+            },
+        )
         return False
 
 
@@ -70,8 +78,6 @@ def _send_and_record(
 # pylint: disable=too-many-locals
 @log_background_task_exceptions
 def send_order_message_notification(message_id: int, recipients: list[User]) -> None:
-    logger.info("Background task send_order_message_notification started for message_id=%s", message_id)
-
     with get_session() as session:
         db_message = session.get(Message, message_id)
         if db_message is None or db_message.order is None:
@@ -88,6 +94,7 @@ def send_order_message_notification(message_id: int, recipients: list[User]) -> 
         author_name = db_message.author.name  # type: ignore[union-attr]
 
         notifications: list[Notification] = []
+        delivered_count = 0
         for recipient in recipients:
             recipient_role = _role_label(recipient)
             subject = f"New message from {author_name} - order {order.id}, {resource_name}"
@@ -103,6 +110,7 @@ def send_order_message_notification(message_id: int, recipients: list[User]) -> 
                 f"{platform_name}"
             )
             sent = _send_email(subject=subject, body=body, recipients=[recipient.email])
+            delivered_count += int(sent)
 
             notifications.append(
                 Notification(
@@ -117,9 +125,14 @@ def send_order_message_notification(message_id: int, recipients: list[User]) -> 
         session.add_all(notifications)
         session.commit()
         logger.info(
-            "send_order_message_notification finished: %s notification(s) saved for message_id=%s",
-            len(notifications),
-            message_id,
+            "Order message notifications processed",
+            extra={
+                "task": "send_order_message_notification",
+                "message_id": message_id,
+                "recipient_count": len(recipients),
+                "success_count": delivered_count,
+                "failure_count": len(recipients) - delivered_count,
+            },
         )
 
 
@@ -130,12 +143,6 @@ def send_order_status_change_notification(
     users: dict[str, list[User]],
     order_log_id: int,
 ) -> None:
-    logger.info(
-        "Background task send_order_status_change_notification started for order_id=%s status_to=%s",
-        order_id,
-        status_to,
-    )
-
     with get_session() as session:
         order = session.get(Order, order_id)
         if order is None:
@@ -168,24 +175,30 @@ def send_order_status_change_notification(
         }
 
         notifications = []
+        delivered_count = 0
         for group in recipient_groups:
             for recipient in users.get(group, []):
                 ctx["role"] = _role_label(recipient)
                 subject, body = email_builder(ctx)
-                notifications.append(
-                    _send_and_record(
-                        subject=subject,
-                        body=body,
-                        recipient=recipient,
-                        notifiable_id=order_log_id,
-                        notifiable_type=NotifiableType.ORDER_LOG,
-                    )
+                notification = _send_and_record(
+                    subject=subject,
+                    body=body,
+                    recipient=recipient,
+                    notifiable_id=order_log_id,
+                    notifiable_type=NotifiableType.ORDER_LOG,
                 )
+                notifications.append(notification)
+                delivered_count += int(notification.email_delivered)
 
         session.add_all(notifications)
         session.commit()
         logger.info(
-            "send_order_status_change_notification finished: %s notification(s) saved for order_id=%s",
-            len(notifications),
-            order_id,
+            "Order status notifications processed",
+            extra={
+                "task": "send_order_status_change_notification",
+                "order_id": order_id,
+                "recipient_count": len(notifications),
+                "success_count": delivered_count,
+                "failure_count": len(notifications) - delivered_count,
+            },
         )
