@@ -1,3 +1,4 @@
+import logging
 import re
 import ssl
 from secrets import compare_digest
@@ -27,6 +28,7 @@ jwks_client = jwt.PyJWKClient(
 http_client = httpx.Client(verify=ssl.create_default_context(cafile=certifi.where()))
 
 BEARER_PATTERN = re.compile(r"^Bearer ([A-Za-z0-9\-_.]+)$")
+logger = logging.getLogger(__name__)
 
 
 @cached(TTLCache(maxsize=256, ttl=300), key=lambda raw_auth, _sub: _sub)
@@ -40,8 +42,16 @@ def _fetch_userinfo(raw_auth: str, _sub: str) -> dict[str, Any]:
         response.raise_for_status()
         return response.json()
     except httpx.HTTPStatusError as e:
+        logger.warning(
+            "Identity provider rejected user info request",
+            extra={"operation": "userinfo", "status_code": e.response.status_code},
+        )
         raise HTTPException(status_code=401, detail="Token rejected by UserInfo endpoint") from e
-    except httpx.RequestError:
+    except httpx.RequestError as exc:
+        logger.exception(
+            "Identity provider user info request failed",
+            extra={"operation": "userinfo", "exception_type": type(exc).__name__},
+        )
         return {}
 
 

@@ -93,7 +93,7 @@ def change_order_status(  # type: ignore
         order_id=order_id,
         status_to=new_status,
         users=grouped_users,
-        order_log_id=order_log.id,  # type: ignore[arg-type]
+        order_log_id=order_log.id,
     )
 
     background_tasks.add_task(wl.change_order_status, order_id=order_id)
