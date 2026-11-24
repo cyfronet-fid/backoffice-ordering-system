@@ -15,7 +15,7 @@ class JsonFormatter(logging.Formatter):
             "message": record.getMessage(),
         }
 
-        if record.exc_info:
+        if record.exc_info and record.exc_info[0] is not None:
             exc_type, exc_value, _ = record.exc_info
 
             log_entry["exception_type"] = exc_type.__name__
